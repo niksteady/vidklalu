@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1ca5d6">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231ca5d6%22/><text y=%22.72em%22 x=%225%22 font-size=%2265%22>📥</text></svg>">
+    <link class="apple-touch-icon" rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231ca5d6%22/><text y=%22.72em%22 x=%225%22 font-size=%2265%22>📥</text></svg>">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📥</text></svg>">
 
     <!-- Вбудований Web App Manifest -->
@@ -207,7 +207,7 @@
                     <div>
                         <label class="block font-bold text-slate-700 mb-1.5">Apps Script Web App URL:</label>
                         <input id="apps-script-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none">
-                        <p class="text-[10px] text-slate-400 mt-1">Введіть сюди URL веб-додатку Google Apps Script для автоматичного запису у вкладку «Докидка відкладеного».</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Тут вказано вашу особисту адресу Apps Script для автоматичного запису у вкладку «Докидка відкладеного».</p>
                     </div>
 
                     <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-2.5">
@@ -223,8 +223,8 @@
                         <ol class="list-decimal pl-4 space-y-1.5 text-[11px] text-slate-500" start="4">
                             <li>Натисніть кнопку <b>Деплой (Deploy) ➔ Нове розгортання (New deployment)</b>.</li>
                             <li>Оберіть тип розгортання: <b>Веб-додаток (Web app)</b>.</li>
-                            <li>У полі «Хто має доступ» обов'язково вкажіть: <b>Усі (Anyone)</b> (це безпечно, дані пишуться лише у ваш файл).</li>
-                            <li>Натисніть <b>Розгорнути (Deploy)</b> та скопіюйте отриманий <b>URL веб-додатка</b> в поле вище.</li>
+                            <li>У полі «Хто має доступ» обов'язково вкажіть: <b>Усі (Anyone)</b>.</li>
+                            <li>Натисніть <b>Розгорнути (Deploy)</b> (якщо потрібно оновити або замінити це посилання іншим).</li>
                         </ol>
                     </div>
                 </div>
@@ -349,6 +349,8 @@
         const API_KEY = 'AIzaSyAeFU5uOUoRvsZL1mXhovlQJ0emfXAPDtk';
         const SPREADSHEET_ID = '1-SCzKnU1HWu9xLqi6cSMWuA8dfOD5HC-P-FcVLgbeJM';
         const SHEET_NAME = 'Інформація';
+        // Посилання за замовчуванням (дефолтний веб-додаток Apps Script)
+        const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwra_OPK6Nbo1E_aGVO0h_RlmnoJE-DpVvAVnqgP0HsaAnQXH8wFfgDPir-vOls7VCpTA/exec';
 
         const HEADERS = {
             article: 'Артикул',
@@ -434,9 +436,17 @@
             // Налаштування Apps Script URL
             const appsScriptInput = document.getElementById('apps-script-url-input');
             if (appsScriptInput) {
-                appsScriptInput.value = localStorage.getItem('apps_script_url_v1') || '';
+                // Пріоритет: 1. Наявне значення в localStorage, 2. Вказане вами дефолтне посилання
+                const savedUrl = localStorage.getItem('apps_script_url_v1');
+                if (!savedUrl) {
+                    localStorage.setItem('apps_script_url_v1', DEFAULT_APPS_SCRIPT_URL);
+                    appsScriptInput.value = DEFAULT_APPS_SCRIPT_URL;
+                } else {
+                    appsScriptInput.value = savedUrl;
+                }
+
                 appsScriptInput.addEventListener('input', (e) => {
-                    localStorage.setItem('apps_script_url_v1', e.target.value.trim());
+                    localStorage.setItem('apps_script_url_v1', e.target.value.trim() || DEFAULT_APPS_SCRIPT_URL);
                 });
             }
 
@@ -557,6 +567,7 @@
                 if (totalCountSpan) totalCountSpan.textContent = totalCount;
             }
 
+            // Топ 5
             function updateTopArticles(uniqueRows) {
                 topArticlesList.innerHTML = '';
                 const sorted = [...uniqueRows].sort((a, b) => b.count - a.count).slice(0, 5);
@@ -659,7 +670,7 @@
                     listWrapper.appendChild(row);
                 });
 
-                // Слухачі для видалення всередині вкладки
+                // Вилучення
                 listWrapper.querySelectorAll('.remove-dokydka-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const idx = parseInt(btn.getAttribute('data-index'));
@@ -672,7 +683,7 @@
                 });
             }
 
-            // Копіювати текст Докидки
+            // Копіювання
             document.getElementById('copy-dokydka-text-btn').addEventListener('click', () => {
                 const items = getDokydkaItems();
                 if (items.length === 0) return;
@@ -683,7 +694,6 @@
                     text += `${idx + 1}. Артикул: ${item.article} | ${item.name} | Ячейка: ${item.cell} | К-сть: ${item.count}\n`;
                 });
 
-                // Використовуємо стабільний метод буфера згідно інструкції Canvas
                 const el = document.createElement('textarea');
                 el.value = text;
                 document.body.appendChild(el);
@@ -694,23 +704,13 @@
                 showToast("Список скопійовано в буфер обміну!", "success");
             });
 
-            // Надіслати Докидку в Google Sheets через Apps Script
+            // Надіслати
             document.getElementById('send-to-sheets-btn').addEventListener('click', async () => {
-                const url = localStorage.getItem('apps_script_url_v1');
+                const url = localStorage.getItem('apps_script_url_v1') || DEFAULT_APPS_SCRIPT_URL;
                 const items = getDokydkaItems();
 
                 if (items.length === 0) {
                     showToast('Список докидки порожній!', 'error');
-                    return;
-                }
-
-                if (!url) {
-                    showToast('Спершу вкажіть URL Apps Script в налаштуваннях знизу!', 'error');
-                    // Автоматично відкриваємо налаштування для зручності
-                    const settingsPanel = document.getElementById('settings-panel');
-                    const chevron = document.getElementById('settings-chevron');
-                    settingsPanel.classList.remove('hidden');
-                    chevron.classList.add('rotate-180');
                     return;
                 }
 
@@ -723,7 +723,7 @@
                     try {
                         const response = await fetch(url, {
                             method: 'POST',
-                            mode: 'no-cors', // Безпечний режим для CORS у Google Apps Script
+                            mode: 'no-cors',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
@@ -731,7 +731,6 @@
                         });
 
                         showToast('Успішно надіслано в Google Таблицю!', 'success');
-                        // Очищуємо список після успіху
                         saveDokydkaItems([]);
                         renderAll(allUniqueRows);
 
@@ -745,18 +744,16 @@
                 });
             });
 
-            // Рендеринг списку
+            // Рендер
             function renderAll(rows) {
                 let filteredRows = [...rows];
 
-                // Фільтр за кнопками
                 if (currentFilter === 'negative') {
                     filteredRows = filteredRows.filter(item => parseFloat(item.inCell) < 0);
                 } else if (currentFilter === 'has-stock') {
                     filteredRows = filteredRows.filter(item => item.stock && item.stock.trim() !== '');
                 }
 
-                // Пошуковий фільтр
                 if (searchQuery.trim() !== '') {
                     const query = searchQuery.toLowerCase().trim();
                     filteredRows = filteredRows.filter(item => 
@@ -784,7 +781,6 @@
                 const seenMap = new Map(seenList.map(i => [i.article, i.seenTime]));
                 const dokydkaItems = getDokydkaItems();
 
-                // Рендер на мобільному та десктопі
                 mobileCardsList.innerHTML = '';
                 desktopTableBody.innerHTML = '';
 
@@ -830,14 +826,13 @@
                         ? `<span class="bg-emerald-50 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded border border-emerald-200">СЬОГОДНІ</span>` 
                         : '';
 
-                    // 1. Мобільна картка
+                    // Мобільна картка
                     const card = document.createElement('div');
                     card.className = `bg-white p-4 rounded-2xl shadow-sm border border-slate-100 transition-all active:scale-[0.99] ${rowStateClass} flex flex-col gap-3 relative overflow-hidden`;
                     card.setAttribute('data-article', item.article);
                     card.setAttribute('data-last-timestamp', item.lastTimestamp);
 
                     card.innerHTML = `
-                        <!-- Докидка чекбокс та артикул -->
                         <div class="flex items-start justify-between gap-2">
                             <div class="flex items-center gap-2.5">
                                 <button class="dokydka-toggle-btn w-6 h-6 rounded-full flex items-center justify-center transition-all ${isInDokydka ? 'bg-emerald-500 text-white shadow-md scale-110' : 'bg-slate-100 text-slate-400 border border-slate-200 hover:bg-slate-200'}">
@@ -885,7 +880,7 @@
                     `;
                     mobileCardsList.appendChild(card);
 
-                    // 2. Десктопний рядок
+                    // Десктопний рядок
                     const tr = document.createElement('tr');
                     tr.className = `hover:bg-slate-50/50 transition-all ${rowStateClass}`;
                     tr.setAttribute('data-article', item.article);
@@ -925,7 +920,7 @@
                     desktopTableBody.appendChild(tr);
                 });
 
-                // Навішування подій Докидки на кнопки
+                // Події Докидки
                 document.querySelectorAll('.dokydka-toggle-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -937,7 +932,7 @@
                 });
             }
 
-            // Делегування приховування
+            // Подія Приховування
             function handleToggleSeen(article, row) {
                 let seen = getSeenArticles();
                 const isAlreadySeen = row.classList.contains('seen-row');
@@ -983,7 +978,7 @@
                 const required = ['article', 'date', 'name', 'liftedBy', 'stock', 'pallet', 'cell', 'inCell'];
                 for (const key of required) {
                     if (idx[key] === -1) {
-                        showError(`Не знайдено обов'язкову колонку "${HEADERS[key]}"`);
+                        showError(`Не знайдено обов'язковуську колонку "${HEADERS[key]}"`);
                         return;
                     }
                 }
@@ -1130,7 +1125,7 @@
             searchInput.addEventListener('input', handleSearch);
             searchInputMobile.addEventListener('input', handleSearch);
 
-            // Нижнє мобільне меню
+            // Нижнє меню
             const listTab = document.getElementById('tab-list-content');
             const statsTab = document.getElementById('tab-stats-content');
             const dokydkaTab = document.getElementById('tab-dokydka-content');
@@ -1204,12 +1199,12 @@
                 if (e.target === mobileDrawer) closeFiltersDrawer();
             });
 
-            // Кнопка примусового оновлення
+            // Оновити дані
             document.getElementById('refresh-data-btn').addEventListener('click', () => {
                 loadData(true);
             });
 
-            // Toggle панелі налаштувань
+            // Toggle налаштувань
             document.getElementById('toggle-settings-btn').addEventListener('click', () => {
                 const settingsPanel = document.getElementById('settings-panel');
                 const chevron = document.getElementById('settings-chevron');
@@ -1232,7 +1227,7 @@
                 });
             }
 
-            // Копіювання коду Google Apps Script
+            // Копіювання коду Apps Script
             document.getElementById('copy-script-code-btn').addEventListener('click', () => {
                 const scriptCode = `function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -1279,11 +1274,11 @@
                 showToast("Код скрипта скопійовано!", "success");
             });
 
-            // Старт завантаження
+            // Старт
             loadData();
         });
 
-        // Service Worker для офлайну
+        // Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
