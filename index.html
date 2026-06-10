@@ -8,7 +8,7 @@
     <!-- Meta для PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1ca5d6">
+    <meta name="theme-color" content="#ffffff">
     <link class="apple-touch-icon" rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231ca5d6%22/><text y=%22.72em%22 x=%225%22 font-size=%2265%22>📥</text></svg>">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📥</text></svg>">
 
@@ -23,43 +23,34 @@
     <style>
         /* Стиль для прихованих/переглянутих елементів */
         .seen-row {
-            opacity: 0.45;
-            background-color: #f8fafc !important;
+            opacity: 0.35;
+            filter: grayscale(40%);
         }
-        .seen-row .text-slate-900, .seen-row .text-slate-700 {
+        .seen-row .text-slate-900, .seen-row .text-slate-755 {
             text-decoration: line-through;
             color: #94a3b8 !important;
         }
         .updated-row {
-            border-left: 4px solid #ef4444;
-            background-color: #fef2f2 !important;
-        }
-        /* Анімація завантаження */
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); opacity: 0.5; }
-            50% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.95); opacity: 0.5; }
-        }
-        .pulse-loader {
-            animation: pulse-ring 2s infinite ease-in-out;
+            border-left: 4px solid #f43f5e !important;
+            background-color: #fff1f2 !important;
         }
         /* Приховування скроллбару на мобільних */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 4px;
+            height: 4px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
+            background: #e2e8f0;
+            border-radius: 2px;
         }
         body {
             -webkit-tap-highlight-color: transparent;
             /* Враховує безпечну зону знизу через фіксоване меню */
-            padding-bottom: calc(env(safe-area-inset-bottom) + 90px);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
         }
         /* Безпечна зона статус-бару зверху */
         header {
-            padding-top: calc(env(safe-area-inset-top) + 12px) !important;
+            padding-top: calc(env(safe-area-inset-top) + 14px) !important;
         }
         /* Безпечна зона навігаційного меню знизу */
         nav {
@@ -70,125 +61,87 @@
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
     <!-- Топ-бар -->
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 pb-3 pt-3 shadow-sm flex items-center justify-between transition-all">
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 pb-3 pt-3 shadow-sm flex items-center justify-between transition-all">
         <div class="flex flex-col">
-            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                <span>📥 Відкладають</span>
-                <span class="text-[10px] bg-cyan-100 text-cyan-800 font-black px-2 py-0.5 rounded-full uppercase">PWA</span>
+            <h1 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+                <span>Відкладають</span>
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
             </h1>
-            <p class="text-[10px] text-slate-400 font-medium">оновлено сьогодні</p>
+            <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-[10px] text-slate-400 font-bold" id="header-stats-text">0 артикулів сьогодні</span>
+            </div>
         </div>
-        <div class="flex items-center gap-1.5">
-            <!-- Кнопка примусового оновлення -->
-            <button id="refresh-data-btn" class="p-2.5 bg-slate-100 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 rounded-full transition-all active:scale-95" title="Оновити дані">
-                <i class="fa-solid fa-rotate text-sm"></i>
+        <div class="flex items-center gap-1">
+            <!-- Кнопка скидання переглянутих -->
+            <button id="reset-button" class="p-2.5 text-slate-400 hover:text-red-500 rounded-full transition-all active:scale-90" title="Показати всі приховані товари">
+                <i class="fa-solid fa-eye text-sm"></i>
             </button>
-            <a href="../Відкладають%20статистика/index.html" class="p-2.5 text-slate-400 hover:text-slate-600 rounded-full transition-all" title="Аналітика">
-                <i class="fa-solid fa-chart-pie text-lg"></i>
-            </a>
+            <!-- Кнопка примусового оновлення -->
+            <button id="refresh-data-btn" class="p-2.5 bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 rounded-full transition-all active:scale-95" title="Оновити дані">
+                <i class="fa-solid fa-rotate text-xs"></i>
+            </button>
         </div>
     </header>
 
     <!-- Основний контейнер контенту -->
-    <main class="max-w-6xl mx-auto px-4 py-4">
+    <main class="max-w-4xl mx-auto px-4 py-3">
 
-        <!-- Секція фільтрів / Пошуку -->
-        <section id="filters-section" class="mb-5 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hidden md:block">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3"><i class="fa-solid fa-filter mr-2 text-cyan-500"></i>Швидкі Фільтри</h3>
-            <div class="grid grid-cols-3 gap-2">
-                <button class="filter-btn active py-2.5 px-3 text-center text-xs rounded-xl font-bold border border-cyan-100 bg-cyan-500 text-white transition-all shadow-sm" data-filter="all">
-                    Всі товари
-                </button>
-                <button class="filter-btn py-2.5 px-3 text-center text-xs rounded-xl font-bold border border-slate-100 bg-slate-50 text-slate-600 transition-all hover:bg-slate-100" data-filter="negative">
-                    Мінус в ячейці
-                </button>
-                <button class="filter-btn py-2.5 px-3 text-center text-xs rounded-xl font-bold border border-slate-100 bg-slate-50 text-slate-600 transition-all hover:bg-slate-100" data-filter="has-stock">
-                    Є в запасі
-                </button>
-            </div>
-
-            <!-- Пошук -->
-            <div class="mt-4 relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
-                <input id="search-input" type="text" placeholder="Пошук за артикулом чи назвою..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all">
+        <!-- Секція пошуку (Завжди видима, дуже компактна) -->
+        <section id="search-section" class="mb-4">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                <input id="search-input" type="text" placeholder="Пошук за артикулом, назвою чи ячейкою..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200/80 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm transition-all">
             </div>
         </section>
 
-        <!-- Дисплей Головного списку -->
-        <section id="tab-list-content" class="active-tab-panel">
+        <!-- Дисплей Головного списку товарів -->
+        <section id="tab-list-content" class="active-tab-panel space-y-3">
             
             <!-- Офлайн статус-індикатор -->
-            <div id="offline-status" class="hidden mb-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-3.5 text-xs flex items-center gap-3">
-                <i class="fa-solid fa-wifi-slash text-amber-500 text-lg"></i>
-                <div>
-                    <span class="font-bold">Ви працюєте офлайн.</span> Показано збережену копію даних.
-                </div>
+            <div id="offline-status" class="hidden mb-3 bg-amber-50 border border-amber-100 text-amber-800 rounded-2xl p-3 text-xs flex items-center gap-2.5">
+                <i class="fa-solid fa-wifi-slash text-amber-500"></i>
+                <span class="font-bold">Працюємо офлайн. Посилання з кешу.</span>
             </div>
 
             <!-- Loader -->
-            <div id="loader" class="flex flex-col items-center justify-center py-20">
-                <div class="loading-spinner w-12 h-12 border-4 border-slate-200 border-t-cyan-500 rounded-full animate-spin"></div>
-                <p class="text-xs text-slate-400 mt-4 font-semibold pulse-loader">Отримання інформації з Google Sheets...</p>
+            <div id="loader" class="flex flex-col items-center justify-center py-24">
+                <div class="w-10 h-10 border-4 border-slate-100 border-t-cyan-500 rounded-full animate-spin"></div>
+                <p class="text-[10px] text-slate-400 mt-3 font-bold uppercase tracking-wider">Оновлення даних...</p>
             </div>
 
-            <!-- Контейнер для таблиці (десктоп) / карток (мобілка) -->
+            <!-- Контейнер для списку товарів -->
             <div id="data-container" class="hidden">
-                
-                <!-- Мобільна версія карток -->
-                <div id="mobile-cards-list" class="grid grid-cols-1 gap-3 md:hidden">
+                <div id="mobile-cards-list" class="grid grid-cols-1 gap-2.5">
                     <!-- Картки рендеритимуться динамічно -->
                 </div>
-
-                <!-- Десктопна версія таблиці -->
-                <div class="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                <th class="p-4 w-12 text-center">Докидка</th>
-                                <th class="p-4">Артикул</th>
-                                <th class="p-4">Назва</th>
-                                <th class="p-4">Піднімали / Час</th>
-                                <th class="p-4">Запас / Палета</th>
-                                <th class="p-4">Ячейка</th>
-                                <th class="p-4 text-center">В ячейці</th>
-                                <th class="p-4 text-center">К-сть</th>
-                                <th class="p-4 text-right">Дія</th>
-                            </tr>
-                        </thead>
-                        <tbody id="desktop-table-body" class="divide-y divide-slate-100 text-sm text-slate-700">
-                            <!-- Рядки рендеритимуться динамічно -->
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
         </section>
 
-        <!-- Нова вкладка: Докидка відкладеного -->
-        <section id="tab-dokydka-content" class="hidden space-y-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
-                        <i class="fa-solid fa-boxes-packing text-emerald-500 mr-2"></i>Докидка відкладеного
+        <!-- Вкладка: Докидка відкладеного -->
+        <section id="tab-dokydka-content" class="hidden space-y-3">
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                <div class="flex justify-between items-center border-b border-slate-50 pb-3 mb-3">
+                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider">
+                        <i class="fa-solid fa-boxes-packing text-emerald-500 mr-1.5"></i>Потрібно докинути
                     </h3>
-                    <span id="dokydka-badge-count" class="bg-emerald-100 text-emerald-800 text-xs font-black px-2.5 py-0.5 rounded-full">0 товарів</span>
+                    <span id="dokydka-badge-count" class="bg-emerald-50 text-emerald-700 text-[10px] font-black px-2.5 py-0.5 rounded-full">0</span>
                 </div>
 
-                <!-- Секція надіслати -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                    <button id="send-to-sheets-btn" class="py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Надіслати в Google Таблицю
+                <!-- Кнопки швидкої дії -->
+                <div class="grid grid-cols-1 gap-2 mb-4">
+                    <button id="send-to-sheets-btn" class="py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-98">
+                        <i class="fa-solid fa-cloud-arrow-up text-sm"></i> Надіслати в Google Таблицю
                     </button>
-                    <button id="copy-dokydka-text-btn" class="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-95">
-                        <i class="fa-solid fa-copy"></i> Копіювати список як текст
+                    <button id="copy-dokydka-text-btn" class="py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 transition-all active:scale-98">
+                        <i class="fa-solid fa-copy"></i> Копіювати текстом
                     </button>
                 </div>
 
-                <!-- Список вибраних товарів у докидку -->
-                <div id="dokydka-list-empty" class="text-center py-12 text-slate-400 flex flex-col items-center justify-center gap-2">
-                    <i class="fa-solid fa-cart-plus text-4xl text-slate-200"></i>
-                    <p class="text-xs font-semibold">Ваш список докидки порожній.</p>
-                    <p class="text-[10px] text-slate-400">Перейдіть на вкладку «Товари» та відмітьте галочкою потрібну продукцію.</p>
+                <!-- Порожній стан -->
+                <div id="dokydka-list-empty" class="text-center py-16 text-slate-400 flex flex-col items-center justify-center gap-2">
+                    <i class="fa-solid fa-cart-plus text-3xl text-slate-200"></i>
+                    <p class="text-xs font-bold text-slate-700">Список докидки порожній</p>
+                    <p class="text-[10px] text-slate-400 max-w-[220px] mx-auto leading-relaxed">Позначайте галочкою товари в загальному списку під час обходу ячейок.</p>
                 </div>
 
                 <div id="dokydka-list-wrapper" class="hidden space-y-2">
@@ -196,150 +149,56 @@
                 </div>
             </div>
 
-            <!-- Налаштування інтеграції з таблицею -->
-            <div class="bg-slate-100 p-5 rounded-2xl border border-slate-200">
-                <button id="toggle-settings-btn" class="w-full flex items-center justify-between text-slate-700 font-bold text-xs uppercase tracking-wider focus:outline-none">
-                    <span><i class="fa-solid fa-gears mr-2 text-cyan-600"></i> Налаштування надсилання в таблицю</span>
+            <!-- Мінімалістична панель налаштувань веб-додатку -->
+            <div class="bg-slate-100 p-4 rounded-3xl border border-slate-200/50">
+                <button id="toggle-settings-btn" class="w-full flex items-center justify-between text-slate-600 font-bold text-[10px] uppercase tracking-wider focus:outline-none">
+                    <span><i class="fa-solid fa-gears mr-1 text-cyan-600"></i> Інтеграція з таблицею</span>
                     <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200" id="settings-chevron"></i>
                 </button>
                 
-                <div id="settings-panel" class="hidden mt-4 space-y-4 pt-4 border-t border-slate-200 text-xs text-slate-600">
+                <div id="settings-panel" class="hidden mt-3 space-y-3 pt-3 border-t border-slate-200 text-xs text-slate-500">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1.5">Apps Script Web App URL:</label>
-                        <input id="apps-script-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none">
-                        <p class="text-[10px] text-slate-400 mt-1">Тут вказано вашу особисту адресу Apps Script для автоматичного запису у вкладку «Докидка відкладеного».</p>
+                        <label class="block font-bold text-slate-700 mb-1">Apps Script Web App URL:</label>
+                        <input id="apps-script-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none font-mono font-bold">
                     </div>
-
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-2.5">
-                        <p class="font-extrabold text-slate-800 text-[11px]"><i class="fa-solid fa-circle-info text-cyan-500 mr-1.5"></i>Проста інструкція з підключення (робиться за 1 хвилину):</p>
-                        <ol class="list-decimal pl-4 space-y-1.5 text-[11px] text-slate-500">
-                            <li>Відкрийте вашу Google Таблицю.</li>
-                            <li>Вгорі оберіть <b>Розширення (Extensions) ➔ Apps Script</b>.</li>
-                            <li>Видаліть увесь стандартний код і вставте скрипт за кнопкою нижче:</li>
-                        </ol>
-                        <button id="copy-script-code-btn" class="py-2 px-3 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold rounded-lg text-[10px] transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-paste"></i> Скопіювати код скрипта
-                        </button>
-                        <ol class="list-decimal pl-4 space-y-1.5 text-[11px] text-slate-500" start="4">
-                            <li>Натисніть кнопку <b>Деплой (Deploy) ➔ Нове розгортання (New deployment)</b>.</li>
-                            <li>Оберіть тип розгортання: <b>Веб-додаток (Web app)</b>.</li>
-                            <li>У полі «Хто має доступ» обов'язково вкажіть: <b>Усі (Anyone)</b>.</li>
-                            <li>Натисніть <b>Розгорнути (Deploy)</b> (якщо потрібно оновити або замінити це посилання іншим).</li>
-                        </ol>
-                    </div>
+                    <button id="copy-script-code-btn" class="w-full py-2 px-3 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold rounded-xl text-[10px] transition-all flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-paste"></i> Скопіювати код скрипта для Apps Script
+                    </button>
                 </div>
-            </div>
-        </section>
-
-        <!-- Секція Статистики -->
-        <section id="tab-stats-content" class="hidden space-y-4">
-            <!-- Блок Статистики -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
-                <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">
-                    <i class="fa-solid fa-chart-simple text-cyan-500 mr-2"></i>Загальна статистика
-                </h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-cyan-50/50 p-4 rounded-xl border border-cyan-100/50">
-                        <p class="text-[10px] text-slate-400 font-semibold mb-1 uppercase">Унікальних артикулів</p>
-                        <p class="text-2xl font-black text-slate-900" id="unique-articles-count">0</p>
-                    </div>
-                    <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50">
-                        <p class="text-[10px] text-slate-400 font-semibold mb-1 uppercase">Всього товарів</p>
-                        <p class="text-2xl font-black text-slate-900" id="total-count">0</p>
-                    </div>
-                </div>
-                <button id="reset-button" class="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs border border-red-200/50 active:scale-95 transition-all mt-2">
-                    <i class="fa-solid fa-trash-can mr-2"></i> Скинути приховані товари
-                </button>
-            </div>
-
-            <!-- Топ 5 за кількістю -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
-                    <i class="fa-solid fa-ranking-star text-amber-500 mr-2"></i>Топ 5 за кількістю
-                </h3>
-                <ul id="top-articles-list" class="space-y-2.5">
-                    <!-- Завантажиться з JS -->
-                </ul>
             </div>
         </section>
 
     </main>
 
-    <!-- Нижнє мобільне меню навігації (Тільки на телефонах) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-2 flex justify-around items-center z-40 shadow-lg transition-all">
-        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1 text-cyan-600" data-target="list">
-            <i class="fa-solid fa-list-check text-xl"></i>
-            <span class="text-[9px] font-bold">Товари</span>
+    <!-- Нижнє мобільне меню навігації -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 px-8 py-2.5 flex justify-around items-center z-40 shadow-lg transition-all">
+        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1 text-cyan-600 w-24" data-target="list">
+            <i class="fa-solid fa-list-check text-lg"></i>
+            <span class="text-[10px] font-black">Товари</span>
         </button>
-        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1 text-slate-400 hover:text-slate-600 relative" data-target="dokydka">
-            <i class="fa-solid fa-boxes-packing text-xl"></i>
-            <span class="text-[9px] font-medium">Докидка</span>
-            <span id="nav-dokydka-count-badge" class="hidden absolute top-0.5 right-2 w-4 h-4 bg-emerald-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">0</span>
-        </button>
-        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1 text-slate-400 hover:text-slate-600" data-target="stats">
-            <i class="fa-solid fa-chart-bar text-xl"></i>
-            <span class="text-[9px] font-medium">Аналітика</span>
-        </button>
-        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1 text-slate-400 hover:text-slate-600" data-target="filters">
-            <i class="fa-solid fa-sliders text-xl"></i>
-            <span class="text-[9px] font-medium">Фільтри</span>
+        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1 text-slate-400 hover:text-slate-600 relative w-24" data-target="dokydka">
+            <i class="fa-solid fa-boxes-packing text-lg"></i>
+            <span class="text-[10px] font-medium">Докидка</span>
+            <span id="nav-dokydka-count-badge" class="hidden absolute top-0.5 right-4 w-4.5 h-4.5 bg-emerald-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">0</span>
         </button>
     </nav>
 
-    <!-- Модалка налаштувань / Фільтрів для мобільних -->
-    <div id="mobile-filters-drawer" class="fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 opacity-0 pointer-events-none flex items-end">
-        <div class="bg-white w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 flex flex-col gap-4">
-            <div class="w-12 h-1 bg-slate-200 rounded-full mx-auto -mt-2 mb-2"></div>
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-extrabold text-slate-900">Мобільні фільтри</h3>
-                <button id="close-drawer-btn" class="text-slate-400 p-1 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <!-- Пошук у модалці -->
-            <div class="relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
-                <input id="search-input-mobile" type="text" placeholder="Пошук за артикулом чи назвою..." class="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-transparent rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all">
-            </div>
-
-            <!-- Кнопки фільтрів всередині модалки -->
-            <div class="flex flex-col gap-2">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Відображати товари:</p>
-                <button class="filter-btn active w-full py-3 px-4 text-left text-xs rounded-xl font-bold border border-cyan-500 bg-cyan-500 text-white transition-all flex items-center justify-between" data-filter="all">
-                    <span>Всі товари</span>
-                    <i class="fa-solid fa-check"></i>
-                </button>
-                <button class="filter-btn w-full py-3 px-4 text-left text-xs rounded-xl font-medium border border-slate-100 bg-slate-50 text-slate-600 transition-all flex items-center justify-between" data-filter="negative">
-                    <span>Мінус в ячейці</span>
-                    <i class="fa-solid fa-check opacity-0"></i>
-                </button>
-                <button class="filter-btn w-full py-3 px-4 text-left text-xs rounded-xl font-medium border border-slate-100 bg-slate-50 text-slate-600 transition-all flex items-center justify-between" data-filter="has-stock">
-                    <span>Є в запасі</span>
-                    <i class="fa-solid fa-check opacity-0"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Нова універсальна красива вбудована модалка для підтверджень замість alert/confirm -->
+    <!-- Вбудована модалка для підтверджень -->
     <div id="confirm-modal" class="fixed inset-0 bg-black/60 z-50 transition-opacity duration-200 opacity-0 pointer-events-none flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 max-w-sm w-full transform scale-95 transition-transform duration-200 shadow-xl flex flex-col gap-4">
-            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-lg mx-auto" id="confirm-icon-container">
-                <i class="fa-solid fa-circle-question" id="confirm-icon"></i>
-            </div>
+        <div class="bg-white rounded-3xl p-5 max-w-xs w-full transform scale-95 transition-transform duration-200 shadow-xl flex flex-col gap-3.5">
             <div class="text-center">
-                <h3 id="confirm-title" class="text-base font-black text-slate-900">Підтвердження</h3>
-                <p id="confirm-desc" class="text-xs text-slate-400 mt-1.5 leading-relaxed">Дія незворотна.</p>
+                <h3 id="confirm-title" class="text-sm font-black text-slate-900">Підтвердження</h3>
+                <p id="confirm-desc" class="text-xs text-slate-400 mt-1 leading-relaxed">Дія незворотна.</p>
             </div>
-            <div class="flex gap-2.5 mt-2">
-                <button id="confirm-cancel-btn" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all active:scale-95">Скасувати</button>
-                <button id="confirm-ok-btn" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-xs transition-all active:scale-95">Підтвердити</button>
+            <div class="flex gap-2">
+                <button id="confirm-cancel-btn" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all active:scale-95">Скасувати</button>
+                <button id="confirm-ok-btn" class="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-xs transition-all active:scale-95">Ок</button>
             </div>
         </div>
     </div>
 
-    <!-- Повідомлення про помилку чи успіх -->
-    <div id="toast-message" class="fixed bottom-20 left-4 right-4 md:bottom-6 md:left-auto md:right-6 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 transition-transform duration-300 translate-y-32 z-50">
+    <!-- Сповіщення (Toast) -->
+    <div id="toast-message" class="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 bg-slate-900 text-white px-4.5 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 transition-transform duration-300 translate-y-32 z-50 md:max-w-xs">
         <i id="toast-icon" class="fa-solid fa-info text-cyan-400"></i>
         <p id="toast-text" class="text-xs font-bold leading-snug"></p>
     </div>
@@ -349,7 +208,7 @@
         const API_KEY = 'AIzaSyAeFU5uOUoRvsZL1mXhovlQJ0emfXAPDtk';
         const SPREADSHEET_ID = '1-SCzKnU1HWu9xLqi6cSMWuA8dfOD5HC-P-FcVLgbeJM';
         const SHEET_NAME = 'Інформація';
-        // Посилання за замовчуванням (дефолтний веб-додаток Apps Script)
+        // Посилання за замовчуванням
         const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwra_OPK6Nbo1E_aGVO0h_RlmnoJE-DpVvAVnqgP0HsaAnQXH8wFfgDPir-vOls7VCpTA/exec';
 
         const HEADERS = {
@@ -368,89 +227,77 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const mobileCardsList = document.getElementById('mobile-cards-list');
-            const desktopTableBody = document.getElementById('desktop-table-body');
-            const uniqueArticlesCountSpan = document.getElementById('unique-articles-count');
-            const totalCountSpan = document.getElementById('total-count');
+            const uniqueArticlesCountSpan = document.getElementById('header-stats-text');
             const resetButton = document.getElementById('reset-button');
-            const topArticlesList = document.getElementById('top-articles-list');
             const loader = document.getElementById('loader');
             const dataContainer = document.getElementById('data-container');
             const offlineStatus = document.getElementById('offline-status');
             const searchInput = document.getElementById('search-input');
-            const searchInputMobile = document.getElementById('search-input-mobile');
 
             let allUniqueRows = [];
-            let currentFilter = 'all';
             let searchQuery = '';
 
-            // Отримання поточної дати
+            // Поточна дата
             const todayFormatted = new Date().toLocaleDateString('uk-UA', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric'
             }).replace(/\//g, '.');
 
-            // Перевірка мережі
+            // Офлайн стан
             function updateOnlineStatus() {
-                if (navigator.onLine) {
-                    offlineStatus.classList.add('hidden');
-                } else {
-                    offlineStatus.classList.remove('hidden');
-                }
+                if (navigator.onLine) offlineStatus.classList.add('hidden');
+                else offlineStatus.classList.remove('hidden');
             }
             window.addEventListener('online', updateOnlineStatus);
             window.addEventListener('offline', updateOnlineStatus);
             updateOnlineStatus();
 
-            // LocalStorage хелпери для приховування
+            // LocalStorage
             function saveSeenArticles(articles) {
-                localStorage.setItem('seenArticles_v2', JSON.stringify(articles));
+                localStorage.setItem('seenArticles_v3', JSON.stringify(articles));
             }
 
             function getSeenArticles() {
-                const seen = localStorage.getItem('seenArticles_v2');
+                const seen = localStorage.getItem('seenArticles_v3');
                 return seen ? JSON.parse(seen) : [];
             }
 
             function saveCachedData(data) {
-                localStorage.setItem('cached_sheet_data', JSON.stringify(data));
-                localStorage.setItem('cached_sheet_time', Date.now().toString());
+                localStorage.setItem('cached_sheet_data_v3', JSON.stringify(data));
             }
 
             function getCachedData() {
-                const data = localStorage.getItem('cached_sheet_data');
+                const data = localStorage.getItem('cached_sheet_data_v3');
                 return data ? JSON.parse(data) : null;
             }
 
-            // LocalStorage для Докидки
             function getDokydkaItems() {
-                const items = localStorage.getItem('dokydka_items_v1');
+                const items = localStorage.getItem('dokydka_items_v2');
                 return items ? JSON.parse(items) : [];
             }
 
             function saveDokydkaItems(items) {
-                localStorage.setItem('dokydka_items_v1', JSON.stringify(items));
+                localStorage.setItem('dokydka_items_v2', JSON.stringify(items));
                 updateDokydkaInterface();
             }
 
             // Налаштування Apps Script URL
             const appsScriptInput = document.getElementById('apps-script-url-input');
             if (appsScriptInput) {
-                // Пріоритет: 1. Наявне значення в localStorage, 2. Вказане вами дефолтне посилання
-                const savedUrl = localStorage.getItem('apps_script_url_v1');
+                const savedUrl = localStorage.getItem('apps_script_url_v2');
                 if (!savedUrl) {
-                    localStorage.setItem('apps_script_url_v1', DEFAULT_APPS_SCRIPT_URL);
+                    localStorage.setItem('apps_script_url_v2', DEFAULT_APPS_SCRIPT_URL);
                     appsScriptInput.value = DEFAULT_APPS_SCRIPT_URL;
                 } else {
                     appsScriptInput.value = savedUrl;
                 }
-
                 appsScriptInput.addEventListener('input', (e) => {
-                    localStorage.setItem('apps_script_url_v1', e.target.value.trim() || DEFAULT_APPS_SCRIPT_URL);
+                    localStorage.setItem('apps_script_url_v2', e.target.value.trim() || DEFAULT_APPS_SCRIPT_URL);
                 });
             }
 
-            // Побудова дати для порівняння
+            // Побудова timestamp
             function parseDateTime(dateString, timeString) {
                 if (!dateString || !timeString) return 0;
                 const [day, month, year] = String(dateString).split('.').map(Number);
@@ -459,22 +306,16 @@
                 return new Date(year, month - 1, day, hours || 0, minutes || 0, seconds || 0).getTime();
             }
 
-            // Toast-сповіщення замість неприпустимих alert()
+            // Toast-сповіщення
             function showToast(message, type = 'info') {
                 const toast = document.getElementById('toast-message');
                 const text = document.getElementById('toast-text');
                 const icon = document.getElementById('toast-icon');
 
                 text.textContent = message;
-                toast.className = toast.className.replace(/bg-\w+-900/g, 'bg-slate-900');
-
-                if (type === 'error') {
-                    icon.className = 'fa-solid fa-triangle-exclamation text-red-400';
-                } else if (type === 'success') {
-                    icon.className = 'fa-solid fa-circle-check text-emerald-400';
-                } else {
-                    icon.className = 'fa-solid fa-circle-info text-cyan-400';
-                }
+                if (type === 'error') icon.className = 'fa-solid fa-circle-exclamation text-rose-400';
+                else if (type === 'success') icon.className = 'fa-solid fa-circle-check text-emerald-400';
+                else icon.className = 'fa-solid fa-circle-info text-cyan-400';
 
                 toast.classList.remove('translate-y-32');
                 toast.classList.add('translate-y-0');
@@ -482,33 +323,18 @@
                 setTimeout(() => {
                     toast.classList.remove('translate-y-0');
                     toast.classList.add('translate-y-32');
-                }, 3500);
+                }, 3000);
             }
 
-            // Вбудована модалка замість confirm
+            // Вбудована красива модалка підтвердження
             let onConfirmCallback = null;
-            function showConfirm(title, desc, isDangerous, onConfirm) {
+            function showConfirm(title, desc, onConfirm) {
                 const modal = document.getElementById('confirm-modal');
                 const t = document.getElementById('confirm-title');
                 const d = document.getElementById('confirm-desc');
-                const okBtn = document.getElementById('confirm-ok-btn');
-                const iconContainer = document.getElementById('confirm-icon-container');
-                const icon = document.getElementById('confirm-icon');
-
                 t.textContent = title;
                 d.textContent = desc;
                 onConfirmCallback = onConfirm;
-
-                if (isDangerous) {
-                    okBtn.className = okBtn.className.replace(/bg-\w+-500|bg-\w+-600/g, 'bg-red-500 hover:bg-red-600');
-                    iconContainer.className = 'w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-lg mx-auto';
-                    icon.className = 'fa-solid fa-triangle-exclamation';
-                } else {
-                    okBtn.className = okBtn.className.replace(/bg-\w+-500|bg-\w+-600/g, 'bg-emerald-500 hover:bg-emerald-600');
-                    iconContainer.className = 'w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-lg mx-auto';
-                    icon.className = 'fa-solid fa-circle-question';
-                }
-
                 modal.classList.remove('pointer-events-none', 'opacity-0');
                 modal.querySelector('div').classList.remove('scale-95');
             }
@@ -526,25 +352,23 @@
                 closeConfirm();
             });
 
-            // Відображення помилки
+            // Помилка завантаження
             function showError(message) {
                 loader.classList.add('hidden');
                 dataContainer.innerHTML = `
-                    <div class="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-5 text-sm flex flex-col md:flex-row items-center gap-4">
-                        <i class="fa-solid fa-circle-exclamation text-3xl text-red-500"></i>
-                        <div>
-                            <p class="font-extrabold text-base mb-1">Помилка завантаження даних</p>
-                            <p class="text-xs text-red-600">${message}</p>
-                            <button onclick="window.location.reload()" class="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs transition-all">
-                                <i class="fa-solid fa-arrows-rotate mr-1.5"></i> Спробувати ще раз
-                            </button>
-                        </div>
+                    <div class="bg-rose-50 border border-rose-100 text-rose-800 rounded-3xl p-5 text-xs flex flex-col items-center gap-3">
+                        <i class="fa-solid fa-triangle-exclamation text-xl text-rose-500"></i>
+                        <p class="font-bold text-center">Не вдалося завантажити дані з Google Sheets</p>
+                        <p class="text-[10px] text-rose-500 text-center">${message}</p>
+                        <button onclick="window.location.reload()" class="mt-1 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-[10px] transition-all">
+                            Спробувати ще раз
+                        </button>
                     </div>
                 `;
                 dataContainer.classList.remove('hidden');
             }
 
-            // Знаходження індексів колонок
+            // Побудова індексів колонок
             function buildColumnIndices(headerRow) {
                 const indices = {};
                 for (const key in HEADERS) {
@@ -561,60 +385,16 @@
                 return indices;
             }
 
-            // Статистика
-            function updateStats(uniqueCount, totalCount) {
-                if (uniqueArticlesCountSpan) uniqueArticlesCountSpan.textContent = uniqueCount;
-                if (totalCountSpan) totalCountSpan.textContent = totalCount;
-            }
-
-            // Топ 5
-            function updateTopArticles(uniqueRows) {
-                topArticlesList.innerHTML = '';
-                const sorted = [...uniqueRows].sort((a, b) => b.count - a.count).slice(0, 5);
-                if (sorted.length === 0) {
-                    topArticlesList.innerHTML = `
-                        <li class="text-center text-xs text-slate-400 italic py-4">Немає аналітики за сьогодні</li>
-                    `;
-                    return;
-                }
-                sorted.forEach((item, index) => {
-                    const li = document.createElement('li');
-                    li.className = "flex justify-between items-center bg-slate-50 border border-slate-100 p-3 rounded-xl";
-                    
-                    const badges = [
-                        'bg-amber-100 text-amber-800 border-amber-200', 
-                        'bg-slate-100 text-slate-700 border-slate-200', 
-                        'bg-orange-100 text-orange-800 border-orange-200'
-                    ];
-                    const badgeClass = badges[index] || 'bg-slate-50 text-slate-500 border-slate-100';
-
-                    li.innerHTML = `
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-xs font-black px-2 py-0.5 rounded-md border ${badgeClass}">${index + 1}</span>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold text-slate-800">${item.article}</span>
-                                <span class="text-[10px] text-slate-400 truncate max-w-[150px]">${item.name}</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-medium text-slate-500">В яч: ${item.inCell}</span>
-                            <span class="text-sm font-extrabold bg-cyan-100 text-cyan-800 px-2.5 py-0.5 rounded-full">${item.count}</span>
-                        </div>
-                    `;
-                    topArticlesList.appendChild(li);
-                });
-            }
-
             // Логіка Докидки
             function toggleDokydkaItem(item) {
                 let current = getDokydkaItems();
                 const exists = current.some(i => i.article === item.article);
                 if (exists) {
                     current = current.filter(i => i.article !== item.article);
-                    showToast(`Видалено з Докидки: ${item.article}`, 'info');
+                    showToast(`Прибрано: ${item.article}`, 'info');
                 } else {
                     current.push(item);
-                    showToast(`Додано в Докидку: ${item.article}`, 'success');
+                    showToast(`Додано в докидку: ${item.article}`, 'success');
                 }
                 saveDokydkaItems(current);
                 renderAll(allUniqueRows);
@@ -628,7 +408,6 @@
                 const listWrapper = document.getElementById('dokydka-list-wrapper');
 
                 if (badge) badge.textContent = `${items.length} товарів`;
-                
                 if (navBadge) {
                     if (items.length > 0) {
                         navBadge.textContent = items.length;
@@ -651,18 +430,18 @@
 
                 items.forEach((item, index) => {
                     const row = document.createElement('div');
-                    row.className = 'bg-slate-50 border border-slate-100 p-3.5 rounded-2xl flex items-center justify-between gap-3';
+                    row.className = 'bg-slate-50 border border-slate-100 p-3 rounded-2xl flex items-center justify-between gap-3';
                     row.innerHTML = `
                         <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm font-black text-slate-900">${item.article}</span>
-                                <span class="text-[10px] bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded">Яч: ${item.cell}</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs font-black text-slate-900 select-all">${item.article}</span>
+                                <span class="text-[9px] bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded">Яч: ${item.cell}</span>
                             </div>
-                            <span class="text-xs text-slate-500 font-medium truncate block">${item.name}</span>
+                            <span class="text-[11px] text-slate-500 font-medium truncate block">${item.name}</span>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Докидка</span>
-                            <button class="remove-dokydka-btn text-slate-400 hover:text-red-500 p-2 text-lg" data-index="${index}">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-lg">К-сть: ${item.count}</span>
+                            <button class="remove-dokydka-btn text-slate-400 hover:text-red-500 p-2 text-base" data-index="${index}">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
@@ -670,28 +449,26 @@
                     listWrapper.appendChild(row);
                 });
 
-                // Вилучення
                 listWrapper.querySelectorAll('.remove-dokydka-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const idx = parseInt(btn.getAttribute('data-index'));
                         const deleted = items[idx];
                         const updated = items.filter((_, i) => i !== idx);
                         saveDokydkaItems(updated);
-                        showToast(`Вилучено з Докидки: ${deleted.article}`, 'info');
+                        showToast(`Вилучено: ${deleted.article}`, 'info');
                         renderAll(allUniqueRows);
                     });
                 });
             }
 
-            // Копіювання
+            // Копіювання докидки в буфер
             document.getElementById('copy-dokydka-text-btn').addEventListener('click', () => {
                 const items = getDokydkaItems();
                 if (items.length === 0) return;
                 
-                let text = "ДОКИДКА ВІДКЛАДЕНОГО\n";
-                text += `Створено: ${new Date().toLocaleString('uk-UA')}\n\n`;
+                let text = "ДОКИДКА ВІДКЛАДЕНОГО\n\n";
                 items.forEach((item, idx) => {
-                    text += `${idx + 1}. Артикул: ${item.article} | ${item.name} | Ячейка: ${item.cell} | К-сть: ${item.count}\n`;
+                    text += `${idx + 1}. Артикул: ${item.article} | Ячейка: ${item.cell} | К-сть: ${item.count}\n`;
                 });
 
                 const el = document.createElement('textarea');
@@ -701,42 +478,40 @@
                 document.execCommand('copy');
                 document.body.removeChild(el);
 
-                showToast("Список скопійовано в буфер обміну!", "success");
+                showToast("Список скопійовано!", "success");
             });
 
-            // Надіслати
+            // Відправка в Таблицю
             document.getElementById('send-to-sheets-btn').addEventListener('click', async () => {
-                const url = localStorage.getItem('apps_script_url_v1') || DEFAULT_APPS_SCRIPT_URL;
+                const url = localStorage.getItem('apps_script_url_v2') || DEFAULT_APPS_SCRIPT_URL;
                 const items = getDokydkaItems();
 
                 if (items.length === 0) {
-                    showToast('Список докидки порожній!', 'error');
+                    showToast('Список порожній', 'error');
                     return;
                 }
 
-                showConfirm("Надсилання", `Відправити ${items.length} товарів у вкладку «Докидка відкладеного»?`, false, async () => {
+                showConfirm("Надсилання", `Додати ${items.length} товарів у лист «Докидка відкладеного»?`, async () => {
                     const btn = document.getElementById('send-to-sheets-btn');
                     const originalText = btn.innerHTML;
                     btn.disabled = true;
-                    btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> Надсилання...`;
+                    btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Відправка...`;
 
                     try {
-                        const response = await fetch(url, {
+                        await fetch(url, {
                             method: 'POST',
                             mode: 'no-cors',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(items)
                         });
 
-                        showToast('Успішно надіслано в Google Таблицю!', 'success');
+                        showToast('Успішно надіслано в Таблицю!', 'success');
                         saveDokydkaItems([]);
                         renderAll(allUniqueRows);
 
                     } catch (error) {
                         console.error(error);
-                        showToast(`Помилка надсилання: ${error.message}`, 'error');
+                        showToast(`Помилка: ${error.message}`, 'error');
                     } finally {
                         btn.disabled = false;
                         btn.innerHTML = originalText;
@@ -744,16 +519,11 @@
                 });
             });
 
-            // Рендер
+            // Рендер карток товарів
             function renderAll(rows) {
                 let filteredRows = [...rows];
 
-                if (currentFilter === 'negative') {
-                    filteredRows = filteredRows.filter(item => parseFloat(item.inCell) < 0);
-                } else if (currentFilter === 'has-stock') {
-                    filteredRows = filteredRows.filter(item => item.stock && item.stock.trim() !== '');
-                }
-
+                // Пошук
                 if (searchQuery.trim() !== '') {
                     const query = searchQuery.toLowerCase().trim();
                     filteredRows = filteredRows.filter(item => 
@@ -763,17 +533,17 @@
                     );
                 }
 
+                // СОРТУВАННЯ: від найбільшої кількості відкладеного до найменшої (b.count - a.count)
                 filteredRows.sort((a, b) => b.count - a.count);
 
                 if (filteredRows.length === 0) {
                     const emptyStateHtml = `
-                        <div class="text-center py-12 text-slate-400 flex flex-col items-center justify-center gap-3">
-                            <i class="fa-solid fa-cubes-stacked text-4xl text-slate-300"></i>
-                            <p class="text-xs font-medium">Немає товарів за вибраними критеріями</p>
+                        <div class="text-center py-16 text-slate-400 flex flex-col items-center justify-center gap-2">
+                            <i class="fa-solid fa-box-open text-3xl text-slate-200"></i>
+                            <p class="text-xs font-bold text-slate-600">Нічого не знайдено</p>
                         </div>
                     `;
                     mobileCardsList.innerHTML = emptyStateHtml;
-                    desktopTableBody.innerHTML = `<tr><td colspan="9">${emptyStateHtml}</td></tr>`;
                     return;
                 }
 
@@ -782,7 +552,6 @@
                 const dokydkaItems = getDokydkaItems();
 
                 mobileCardsList.innerHTML = '';
-                desktopTableBody.innerHTML = '';
 
                 const regularItems = [];
                 const seenItems = [];
@@ -812,115 +581,108 @@
 
                 finalRenderSequence.forEach(({ item, rowStateClass, isSeen, isUpdated }) => {
                     const isInDokydka = dokydkaItems.some(di => di.article === item.article);
-                    
-                    let badgeColorClass = 'bg-slate-100 text-slate-700';
-                    const val = parseFloat(item.inCell);
-                    if (!isNaN(val)) {
-                        if (val > 10) badgeColorClass = 'bg-emerald-100 text-emerald-800 font-bold';
-                        else if (val >= 0) badgeColorClass = 'bg-amber-100 text-amber-800 font-bold';
-                        else badgeColorClass = 'bg-red-100 text-red-800 font-bold';
+                    const isLiftedToday = item.liftedBy === todayFormatted;
+
+                    // Парсимо числові значення для розумного дефіциту та добору
+                    const inCellVal = parseFloat(item.inCell) || 0;
+                    const countVal = parseFloat(item.count) || 0;
+
+                    // Динамічний колір для "В ячейці"
+                    let inCellColorClass = 'bg-slate-100 text-slate-700 border-slate-200';
+                    if (inCellVal <= 0) {
+                        inCellColorClass = 'bg-rose-50 text-rose-700 border-rose-200/60 font-black';
+                    } else if (inCellVal < countVal) {
+                        inCellColorClass = 'bg-amber-50 text-amber-700 border-amber-200/60 font-black';
+                    } else {
+                        inCellColorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200/60 font-black';
                     }
 
-                    const isLiftedToday = item.liftedBy === todayFormatted;
-                    const liftedBadge = isLiftedToday 
-                        ? `<span class="bg-emerald-50 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded border border-emerald-200">СЬОГОДНІ</span>` 
-                        : '';
+                    // Оформлення статусу підйому сьогодні
+                    let liftStatusHtml = '';
+                    if (isLiftedToday) {
+                        liftStatusHtml = `
+                            <span class="bg-emerald-50 text-emerald-750 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-100/80 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                Піднято о ${item.liftedTime || '—'} (${item.liftedBy})
+                            </span>
+                        `;
+                    } else {
+                        liftStatusHtml = `
+                            <span class="text-slate-400 text-[9px] font-semibold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
+                                Піднімали раніше (${item.liftedBy || '—'} о ${item.liftedTime || '—'})
+                            </span>
+                        `;
+                    }
 
-                    // Мобільна картка
                     const card = document.createElement('div');
-                    card.className = `bg-white p-4 rounded-2xl shadow-sm border border-slate-100 transition-all active:scale-[0.99] ${rowStateClass} flex flex-col gap-3 relative overflow-hidden`;
+                    card.className = `bg-white p-3.5 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-2.5 relative transition-all active:scale-[0.99] ${rowStateClass}`;
                     card.setAttribute('data-article', item.article);
                     card.setAttribute('data-last-timestamp', item.lastTimestamp);
 
                     card.innerHTML = `
-                        <div class="flex items-start justify-between gap-2">
-                            <div class="flex items-center gap-2.5">
-                                <button class="dokydka-toggle-btn w-6 h-6 rounded-full flex items-center justify-center transition-all ${isInDokydka ? 'bg-emerald-500 text-white shadow-md scale-110' : 'bg-slate-100 text-slate-400 border border-slate-200 hover:bg-slate-200'}">
-                                    <i class="fa-solid fa-check text-xs"></i>
+                        <!-- Верхній блок: Артикул та Дії -->
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <!-- Кнопка Докидки -->
+                                <button class="dokydka-toggle-btn w-7 h-7 rounded-full flex items-center justify-center transition-all ${isInDokydka ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-400 border border-slate-200/60 hover:bg-slate-200'}">
+                                    <i class="fa-solid fa-check text-[10px]"></i>
                                 </button>
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">АРТИКУЛ</span>
-                                    <span class="text-base font-black text-slate-900 tracking-tight select-all">${item.article}</span>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider">АРТИКУЛ</span>
+                                    <span class="text-sm font-black text-slate-900 tracking-tight select-all truncate">${item.article}</span>
                                 </div>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <span class="text-[9px] bg-slate-100 text-slate-500 font-bold px-2 py-1 rounded-lg">К-сть: ${item.count}</span>
-                                <span class="text-[9px] ${badgeColorClass} px-2 py-1 rounded-lg">В яч: ${item.inCell}</span>
                             </div>
                         </div>
 
-                        <div class="text-xs font-bold text-slate-700 line-clamp-2 leading-relaxed">${item.name}</div>
+                        <!-- Назва товару -->
+                        <div class="text-[11px] font-bold text-slate-700 line-clamp-1 leading-snug">${item.name}</div>
 
-                        <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl text-[11px] border border-slate-100">
-                            <div>
-                                <span class="text-[9px] text-slate-400 block font-bold">ОСТАННЯ ЯЧЕЙКА</span>
-                                <span class="font-extrabold text-slate-800">${item.cell || '—'}</span>
-                            </div>
-                            <div>
-                                <span class="text-[9px] text-slate-400 block font-bold">ЗАПАС / ПАЛЕТА</span>
-                                <span class="font-bold text-slate-700 truncate block">${item.stock || '—'} / ${item.pallet || '—'}</span>
+                        <!-- Локація (Ячейка відбору) - Максимально видно -->
+                        <div class="flex gap-2 text-xs font-black">
+                            <div class="bg-slate-900 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                                <span class="text-[8px] text-slate-400 uppercase tracking-wider font-bold">Ячейка:</span>
+                                <span>${item.cell || '—'}</span>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between mt-1 pt-2 border-t border-slate-100 text-[10px]">
-                            <div class="flex flex-col text-slate-500">
-                                <span class="font-black text-slate-400 text-[8px] uppercase">Піднімали</span>
-                                <div class="flex items-center gap-1 font-semibold">
-                                    <span class="font-bold text-slate-700 truncate max-w-[100px]">${item.liftedBy || 'невідомо'}</span>
-                                    <span>о ${item.liftedTime || '—'}</span>
-                                </div>
+                        <!-- Інформаційне табло: ВІДКЛАЛИ | В ЯЧЕЙЦІ | ЗАПАС -->
+                        <div class="grid grid-cols-3 gap-1.5 pt-1">
+                            <!-- 1. Скільки відклали -->
+                            <div class="bg-cyan-50/60 rounded-2xl p-2.5 border border-cyan-100 text-center flex flex-col justify-center">
+                                <span class="text-[8px] font-black text-cyan-600 uppercase tracking-wider block mb-0.5">Відклали</span>
+                                <span class="text-sm font-black text-cyan-900">${item.count} шт</span>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                                ${liftedBadge}
-                                <button class="hide-button px-3.5 py-2 text-[10px] font-black ${isSeen && !isUpdated ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-sm'} rounded-xl transition-all">
-                                    <i class="fa-solid ${isSeen && !isUpdated ? 'fa-eye' : 'fa-eye-slash'} mr-1"></i> ${isSeen && !isUpdated ? BTN_SHOW : BTN_HIDE}
-                                </button>
+
+                            <!-- 2. Скільки в ячейці -->
+                            <div class="rounded-2xl p-2.5 border text-center flex flex-col justify-center ${inCellColorClass}">
+                                <span class="text-[8px] font-black uppercase tracking-wider block mb-0.5">В ячейці</span>
+                                <span class="text-sm font-black">${item.inCell || '0'} шт</span>
                             </div>
+
+                            <!-- 3. Скільки запас (Місце та палета в одному блоці) -->
+                            <div class="bg-purple-50/60 rounded-2xl p-2.5 border border-purple-100 text-center flex flex-col justify-center min-w-0">
+                                <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider block mb-0.5">Запас (Місце)</span>
+                                <span class="text-xs font-black text-purple-900 truncate block">
+                                    ${item.stock ? item.stock : 'Немає'}
+                                </span>
+                                ${item.stock && item.pallet ? `<span class="text-[9px] font-bold text-purple-500 block truncate mt-0.5">Пал: ${item.pallet}</span>` : ''}
+                            </div>
+                        </div>
+
+                        <!-- Нижній блок: Підйоми та приховування -->
+                        <div class="flex items-center justify-between mt-0.5 pt-2 border-t border-slate-50">
+                            ${liftStatusHtml}
+                            
+                            <button class="hide-button text-slate-300 hover:text-slate-500 p-1 rounded transition-all">
+                                <i class="fa-solid ${isSeen && !isUpdated ? 'fa-eye-slash text-slate-300' : 'fa-eye'} text-sm"></i>
+                            </button>
                         </div>
                     `;
                     mobileCardsList.appendChild(card);
-
-                    // Десктопний рядок
-                    const tr = document.createElement('tr');
-                    tr.className = `hover:bg-slate-50/50 transition-all ${rowStateClass}`;
-                    tr.setAttribute('data-article', item.article);
-                    tr.setAttribute('data-last-timestamp', item.lastTimestamp);
-
-                    tr.innerHTML = `
-                        <td class="p-4 text-center">
-                            <button class="dokydka-toggle-btn w-6 h-6 rounded-full flex items-center justify-center mx-auto transition-all ${isInDokydka ? 'bg-emerald-500 text-white scale-110' : 'bg-slate-100 text-slate-400 border border-slate-250 hover:bg-slate-200'}">
-                                <i class="fa-solid fa-check text-[10px]"></i>
-                            </button>
-                        </td>
-                        <td class="p-4 font-extrabold text-slate-900 select-all">${item.article}</td>
-                        <td class="p-4 max-w-xs font-semibold text-slate-600 truncate">${item.name}</td>
-                        <td class="p-4">
-                            <div class="flex flex-col">
-                                <span class="font-bold text-slate-800 flex items-center gap-1.5">${item.liftedBy} ${liftedBadge}</span>
-                                <span class="text-xs text-slate-400">Час: ${item.liftedTime}</span>
-                            </div>
-                        </td>
-                        <td class="p-4">
-                            <div class="flex flex-col">
-                                <span class="font-semibold text-slate-700">${item.stock || '—'}</span>
-                                <span class="text-xs text-slate-400">Пал: ${item.pallet || '—'}</span>
-                            </div>
-                        </td>
-                        <td class="p-4 font-bold text-slate-800">${item.cell || '—'}</td>
-                        <td class="p-4 text-center">
-                            <span class="inline-block text-xs px-2.5 py-1 rounded-full ${badgeColorClass}">${item.inCell}</span>
-                        </td>
-                        <td class="p-4 text-center font-extrabold text-slate-900">${item.count}</td>
-                        <td class="p-4 text-right">
-                            <button class="hide-button px-3 py-1.5 text-xs font-bold ${isSeen && !isUpdated ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-sm'} rounded-lg transition-all">
-                                ${isSeen && !isUpdated ? BTN_SHOW : BTN_HIDE}
-                            </button>
-                        </td>
-                    `;
-                    desktopTableBody.appendChild(tr);
                 });
 
-                // Події Докидки
+                // Події докидки
                 document.querySelectorAll('.dokydka-toggle-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -932,18 +694,18 @@
                 });
             }
 
-            // Подія Приховування
+            // Логіка Сховати/Показати
             function handleToggleSeen(article, row) {
                 let seen = getSeenArticles();
                 const isAlreadySeen = row.classList.contains('seen-row');
 
                 if (isAlreadySeen) {
                     seen = seen.filter(i => i.article !== article);
-                    showToast(`Артикул ${article} знову відображається`, 'info');
+                    showToast(`Артикул ${article} відновлено`, 'info');
                 } else {
                     seen = seen.filter(i => i.article !== article);
                     seen.push({ article, seenTime: Date.now() });
-                    showToast(`Артикул ${article} приховано`, 'success');
+                    showToast(`Приховано артикул ${article}`, 'success');
                 }
                 saveSeenArticles(seen);
                 renderAll(allUniqueRows);
@@ -957,18 +719,10 @@
                 handleToggleSeen(article, card);
             });
 
-            desktopTableBody.addEventListener('click', (e) => {
-                const btn = e.target.closest('.hide-button');
-                if (!btn) return;
-                const tr = btn.closest('[data-article]');
-                const article = tr.getAttribute('data-article');
-                handleToggleSeen(article, tr);
-            });
-
-            // Обробка даних Google Sheets
+            // Обробка сирих даних
             function processRawData(rows) {
                 if (rows.length < 3) {
-                    showError('Лист не містить достатньо даних.');
+                    showError('Лист таблиці порожній.');
                     return;
                 }
 
@@ -978,7 +732,7 @@
                 const required = ['article', 'date', 'name', 'liftedBy', 'stock', 'pallet', 'cell', 'inCell'];
                 for (const key of required) {
                     if (idx[key] === -1) {
-                        showError(`Не знайдено обов'язковуську колонку "${HEADERS[key]}"`);
+                        showError(`Не знайдено обов'язкову колонку "${HEADERS[key]}"`);
                         return;
                     }
                 }
@@ -989,15 +743,13 @@
                 if (articlesToday.length === 0) {
                     loader.classList.add('hidden');
                     dataContainer.innerHTML = `
-                        <div class="text-center py-16 text-slate-400 flex flex-col items-center justify-center gap-3">
-                            <i class="fa-solid fa-calendar-xmark text-5xl text-slate-300"></i>
-                            <p class="text-sm font-extrabold text-slate-800">Сьогодні відкладених товарів немає</p>
-                            <p class="text-xs">Чекаємо на надходження нових товарів у таблиці</p>
+                        <div class="text-center py-20 text-slate-400 flex flex-col items-center justify-center gap-2">
+                            <i class="fa-solid fa-calendar-xmark text-4xl text-slate-300"></i>
+                            <p class="text-xs font-bold text-slate-700">За сьогодні нічого не відкладали</p>
                         </div>
                     `;
                     dataContainer.classList.remove('hidden');
-                    updateStats(0, 0);
-                    updateTopArticles([]);
+                    uniqueArticlesCountSpan.textContent = "0 артикулів сьогодні";
                     return;
                 }
 
@@ -1030,8 +782,7 @@
 
                 allUniqueRows = Array.from(articleDataMap.values());
 
-                updateStats(allUniqueRows.length, articlesToday.length);
-                updateTopArticles(allUniqueRows);
+                uniqueArticlesCountSpan.textContent = `${allUniqueRows.length} унікальних артикулів`;
                 
                 loader.classList.add('hidden');
                 dataContainer.classList.remove('hidden');
@@ -1046,7 +797,7 @@
                     const cached = getCachedData();
                     if (cached) {
                         processRawData(cached);
-                        showToast('Завантажено з локального кешу (немає мережі)', 'info');
+                        showToast('Дані з офлайн-кешу', 'info');
                         return;
                     }
                 }
@@ -1058,90 +809,39 @@
 
                 try {
                     const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`Статус сервера ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`Статус ${response.status}`);
 
                     const data = await response.json();
-                    if (data.error) {
-                        throw new Error(data.error.message);
-                    }
+                    if (data.error) throw new Error(data.error.message);
 
                     const rows = data.values || [];
                     saveCachedData(rows);
                     processRawData(rows);
 
-                    if (forceReload) {
-                        showToast('Дані успішно оновлено!', 'success');
-                    }
+                    if (forceReload) showToast('Дані оновлено!', 'success');
 
                 } catch (error) {
                     console.error(error);
                     const cached = getCachedData();
                     if (cached) {
                         processRawData(cached);
-                        showToast('Помилка оновлення. Завантажено кеш-копію', 'error');
+                        showToast('Завантажено локальний кеш', 'error');
                     } else {
                         showError(error.message || 'Невідома помилка підключення');
                     }
                 }
             }
 
-            // Обробники фільтрів
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const filterValue = btn.getAttribute('data-filter');
-                    currentFilter = filterValue;
-
-                    document.querySelectorAll('.filter-btn').forEach(b => {
-                        if (b.getAttribute('data-filter') === filterValue) {
-                            b.classList.add('active', 'bg-cyan-500', 'text-white', 'border-cyan-500');
-                            b.classList.remove('bg-slate-50', 'text-slate-600', 'border-slate-100');
-                            const icon = b.querySelector('.fa-check');
-                            if (icon) icon.classList.remove('opacity-0');
-                        } else {
-                            b.classList.remove('active', 'bg-cyan-500', 'text-white', 'border-cyan-500');
-                            b.classList.add('bg-slate-50', 'text-slate-600', 'border-slate-100');
-                            const icon = b.querySelector('.fa-check');
-                            if (icon) icon.classList.add('opacity-0');
-                        }
-                    });
-
-                    renderAll(allUniqueRows);
-                });
-            });
-
             // Пошук
-            const handleSearch = (e) => {
+            searchInput.addEventListener('input', (e) => {
                 searchQuery = e.target.value;
-                if (e.target === searchInput) {
-                    searchInputMobile.value = searchQuery;
-                } else {
-                    searchInput.value = searchQuery;
-                }
                 renderAll(allUniqueRows);
-            };
-
-            searchInput.addEventListener('input', handleSearch);
-            searchInputMobile.addEventListener('input', handleSearch);
+            });
 
             // Нижнє меню
             const listTab = document.getElementById('tab-list-content');
-            const statsTab = document.getElementById('tab-stats-content');
             const dokydkaTab = document.getElementById('tab-dokydka-content');
-            const filterSection = document.getElementById('filters-section');
-            const mobileDrawer = document.getElementById('mobile-filters-drawer');
-            const mobileDrawerContent = mobileDrawer.querySelector('div');
-
-            function openFiltersDrawer() {
-                mobileDrawer.classList.remove('pointer-events-none', 'opacity-0');
-                mobileDrawerContent.classList.remove('translate-y-full');
-            }
-
-            function closeFiltersDrawer() {
-                mobileDrawer.classList.add('pointer-events-none', 'opacity-0');
-                mobileDrawerContent.classList.add('translate-y-full');
-            }
+            const searchSection = document.getElementById('search-section');
 
             document.querySelectorAll('.nav-tab-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1150,56 +850,27 @@
                     document.querySelectorAll('.nav-tab-btn').forEach(b => {
                         b.classList.remove('text-cyan-600');
                         b.classList.add('text-slate-400');
-                        b.querySelector('span').classList.replace('font-bold', 'font-medium');
+                        b.querySelector('span').classList.replace('font-black', 'font-medium');
                     });
 
                     btn.classList.add('text-cyan-600');
                     btn.classList.remove('text-slate-400');
-                    btn.querySelector('span').classList.replace('font-medium', 'font-bold');
+                    btn.querySelector('span').classList.replace('font-medium', 'font-black');
 
                     if (target === 'list') {
                         listTab.classList.remove('hidden');
-                        statsTab.classList.add('hidden');
                         dokydkaTab.classList.add('hidden');
-                        filterSection.classList.add('hidden');
-                        closeFiltersDrawer();
+                        searchSection.classList.remove('hidden');
                     } else if (target === 'dokydka') {
                         listTab.classList.add('hidden');
-                        statsTab.classList.add('hidden');
                         dokydkaTab.classList.remove('hidden');
-                        filterSection.classList.add('hidden');
-                        closeFiltersDrawer();
+                        searchSection.classList.add('hidden');
                         updateDokydkaInterface();
-                    } else if (target === 'stats') {
-                        listTab.classList.add('hidden');
-                        statsTab.classList.remove('hidden');
-                        dokydkaTab.classList.add('hidden');
-                        filterSection.classList.add('hidden');
-                        closeFiltersDrawer();
-                    } else if (target === 'filters') {
-                        openFiltersDrawer();
-                        btn.classList.remove('text-cyan-600');
-                        btn.classList.add('text-slate-400');
-                        btn.querySelector('span').classList.replace('font-bold', 'font-medium');
-
-                        let activeContentTab = 'list';
-                        if (!listTab.classList.contains('hidden')) activeContentTab = 'list';
-                        else if (!dokydkaTab.classList.contains('hidden')) activeContentTab = 'dokydka';
-                        else activeContentTab = 'stats';
-
-                        const originalActiveBtn = document.querySelector(`.nav-tab-btn[data-target="${activeContentTab}"]`);
-                        originalActiveBtn.classList.add('text-cyan-600');
-                        originalActiveBtn.querySelector('span').classList.replace('font-medium', 'font-bold');
                     }
                 });
             });
 
-            document.getElementById('close-drawer-btn').addEventListener('click', closeFiltersDrawer);
-            mobileDrawer.addEventListener('click', (e) => {
-                if (e.target === mobileDrawer) closeFiltersDrawer();
-            });
-
-            // Оновити дані
+            // Кнопка оновити
             document.getElementById('refresh-data-btn').addEventListener('click', () => {
                 loadData(true);
             });
@@ -1209,25 +880,22 @@
                 const settingsPanel = document.getElementById('settings-panel');
                 const chevron = document.getElementById('settings-chevron');
                 const isHidden = settingsPanel.classList.toggle('hidden');
-                if (isHidden) {
-                    chevron.classList.remove('rotate-180');
-                } else {
-                    chevron.classList.add('rotate-180');
-                }
+                if (isHidden) chevron.classList.remove('rotate-180');
+                else chevron.classList.add('rotate-180');
             });
 
-            // Скинути приховані товари
+            // Скинути переглянуті
             if (resetButton) {
                 resetButton.addEventListener('click', () => {
-                    showConfirm('Скидання товарів', 'Скинути список прихованих/переглянутих товарів і повернути їх у загальний список?', true, () => {
-                        localStorage.removeItem('seenArticles_v2');
+                    showConfirm('Показати всі приховані?', 'Повернути всі приховані вами товари назад у загальний список?', () => {
+                        localStorage.removeItem('seenArticles_v3');
                         renderAll(allUniqueRows);
-                        showToast('Всі товари повернуто в загальний список!', 'success');
+                        showToast('Всі товари знову показуються!', 'success');
                     });
                 });
             }
 
-            // Копіювання коду Apps Script
+            // Код Apps Script
             document.getElementById('copy-script-code-btn').addEventListener('click', () => {
                 const scriptCode = `function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -1270,8 +938,7 @@
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-
-                showToast("Код скрипта скопійовано!", "success");
+                showToast("Скрипт скопійовано!", "success");
             });
 
             // Старт
@@ -1282,7 +949,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'vidkladaute-pwa-cache-v2';
+                    const CACHE_NAME = 'vidkladaute-pwa-cache-v3';
                     const ASSETS_TO_CACHE = [
                         '${window.location.pathname}',
                         'https://cdn.tailwindcss.com',
@@ -1317,9 +984,7 @@
                         }
                         event.respondWith(
                             caches.match(event.request).then((cachedResponse) => {
-                                if (cachedResponse) {
-                                    return cachedResponse;
-                                }
+                                if (cachedResponse) return cachedResponse;
                                 return fetch(event.request).then((response) => {
                                     if (response.status === 200) {
                                         const responseCopy = response.clone();
@@ -1328,9 +993,7 @@
                                         });
                                     }
                                     return response;
-                                }).catch(() => {
-                                    return caches.match('${window.location.pathname}');
-                                });
+                                }).catch(() => caches.match('${window.location.pathname}'));
                             })
                         );
                     });
@@ -1338,10 +1001,8 @@
 
                 const blob = new Blob([swCode], { type: 'application/javascript' });
                 const swUrl = URL.createObjectURL(blob);
-
                 navigator.serviceWorker.register(swUrl, { scope: './' })
-                    .then(reg => console.log('Service Worker v2 зареєстровано!'))
-                    .catch(err => console.log('SW registration error:', err));
+                    .then(() => console.log('PWA Service Worker Ready'));
             });
         }
     </script>
