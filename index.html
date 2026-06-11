@@ -613,8 +613,21 @@
                 // а не час пристрою. Тоді «знову відклали» порівнює час із таблиці
                 // з часом із таблиці — без розбіжності годинників.
                 const ackTs = item ? item.lastTimestamp : Date.now();
-                let seen = getSeenArticles();
-                seen = seen.filter(i => i.article !== article);
+
+                // «Все є» — остаточне рішення. Прибираємо артикул зі списків
+                // докидки й надісланих, щоб він лишився рівно в одному стані.
+                // Інакше старий запис «надіслано» має вищий пріоритет у getItemStatus
+                // і картка не ховається.
+                const dok = getDokydkaItems();
+                if (dok.some(i => i.article === article)) {
+                    saveDokydkaItems(dok.filter(i => i.article !== article));
+                }
+                const sent = getSentArticles();
+                if (sent.some(i => i.article === article)) {
+                    saveSentArticles(sent.filter(i => i.article !== article));
+                }
+
+                let seen = getSeenArticles().filter(i => i.article !== article);
                 seen.push({ article, seenTime: ackTs });
                 saveSeenArticles(seen);
                 showToast(`${article}: все є, докидка не потрібна`, 'success');
@@ -623,6 +636,16 @@
 
             // Позначити «Докинути»
             function markDokydka(item) {
+                // Докидка — теж остаточне рішення. Прибираємо з «перевірено» й «надісланих».
+                const seen = getSeenArticles();
+                if (seen.some(i => i.article === item.article)) {
+                    saveSeenArticles(seen.filter(i => i.article !== item.article));
+                }
+                const sent = getSentArticles();
+                if (sent.some(i => i.article === item.article)) {
+                    saveSentArticles(sent.filter(i => i.article !== item.article));
+                }
+
                 let current = getDokydkaItems();
                 if (!current.some(i => i.article === item.article)) {
                     current.push(item);
