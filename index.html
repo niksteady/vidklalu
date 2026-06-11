@@ -608,9 +608,14 @@
 
             // Позначити «Все є»
             function markOk(article) {
+                const item = allUniqueRows.find(r => r.article === article);
+                // Запам'ятовуємо час ВІДКЛАДАННЯ, яке щойно підтвердили (з таблиці),
+                // а не час пристрою. Тоді «знову відклали» порівнює час із таблиці
+                // з часом із таблиці — без розбіжності годинників.
+                const ackTs = item ? item.lastTimestamp : Date.now();
                 let seen = getSeenArticles();
                 seen = seen.filter(i => i.article !== article);
-                seen.push({ article, seenTime: Date.now() });
+                seen.push({ article, seenTime: ackTs });
                 saveSeenArticles(seen);
                 showToast(`${article}: все є, докидка не потрібна`, 'success');
                 renderAll(allUniqueRows);
@@ -751,11 +756,12 @@
 
                         // Запам'ятовуємо надіслані артикули, щоб вони не повернулись
                         // у «До перевірки» після очищення списку докидки.
+                        // Час беремо з товару (з таблиці), а не з пристрою — щоб
+                        // повторне відкладання визначалось без розбіжності годинників.
                         const sent = getSentArticles();
-                        const now = Date.now();
                         items.forEach(it => {
                             if (!sent.some(s => s.article === it.article)) {
-                                sent.push({ article: it.article, sentTime: now });
+                                sent.push({ article: it.article, sentTime: it.lastTimestamp || Date.now() });
                             }
                         });
                         saveSentArticles(sent);   // оновлює стан + синхронізує
