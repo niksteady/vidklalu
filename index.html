@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Відкладають - PWA</title>
-    
+    <title>Відкладають — Перевірка докидки</title>
+
     <!-- Meta для PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#ffffff">
-    
-    <!-- Надійна суцільна іконка для пристроїв Apple (без прозорості, щоб не було чорного квадрата) -->
-    <link class="apple-touch-icon" rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231ca5d6%22/><text y=%22.75em%22 x=%2216%22 font-size=%2260%22>📥</text></svg>">
+    <meta name="theme-color" content="#0f172a">
+
+    <!-- Суцільна іконка для пристроїв Apple -->
+    <link class="apple-touch-icon" rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23ea580c%22/><text y=%22.75em%22 x=%2216%22 font-size=%2260%22>📥</text></svg>">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📥</text></svg>">
 
     <!-- Тимчасовий лінк для маніфесту, який перезапишеться скриптом для PWA -->
@@ -21,129 +21,164 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Шрифт Golos Text (кирилиця, технічний гротеск) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Golos Text"', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
-        /* Стиль для прихованих/переглянутих елементів */
-        .seen-row {
-            opacity: 0.35;
-            filter: grayscale(40%);
-        }
-        .seen-row .text-slate-900, .seen-row .text-slate-755 {
-            text-decoration: line-through;
-            color: #94a3b8 !important;
-        }
-        .updated-row {
-            border-left: 4px solid #f43f5e !important;
-            background-color: #fff1f2 !important;
-        }
-        /* Приховування скроллбару на мобільних */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #e2e8f0;
-            border-radius: 2px;
-        }
         body {
             -webkit-tap-highlight-color: transparent;
+            font-feature-settings: "tnum";
             /* Враховує безпечну зону знизу через фіксоване меню */
-            padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
         }
         /* Безпечна зона статус-бару зверху */
         header {
-            padding-top: calc(env(safe-area-inset-top) + 14px) !important;
+            padding-top: calc(env(safe-area-inset-top) + 10px) !important;
         }
         /* Безпечна зона навігаційного меню знизу */
         nav {
             padding-bottom: calc(env(safe-area-inset-bottom) + 10px) !important;
         }
+        /* Картка, що повернулась після перевірки (нові відкладання) */
+        .updated-row {
+            border: 2px solid #f43f5e !important;
+        }
+        /* Тонкий скроллбар */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
-    <!-- Топ-бар -->
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 pb-3 pt-3 shadow-sm flex items-center justify-between transition-all">
-        <div class="flex flex-col">
-            <h1 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-                <span>Відкладають</span>
-                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
-            </h1>
-            <div class="flex items-center gap-2 mt-0.5">
-                <span class="text-[10px] text-slate-400 font-bold" id="header-stats-text">0 артикулів сьогодні</span>
+    <!-- Топ-бар: назва + прогрес обходу -->
+    <header class="sticky top-0 z-30 bg-slate-900 text-white px-4 pb-3 pt-3 shadow-md">
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex flex-col min-w-0">
+                <h1 class="text-lg font-black tracking-tight leading-tight">Перевірка докидки</h1>
+                <span class="text-xs text-slate-400 font-semibold" id="header-stats-text">Завантаження…</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <!-- Індикатор синхронізації між пристроями -->
+                <span id="sync-status" class="w-9 h-9 flex items-center justify-center text-slate-400" title="Синхронізація">
+                    <i class="fa-solid fa-cloud text-sm"></i>
+                </span>
+                <!-- Кнопка скидання перевірених -->
+                <button id="reset-button" class="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 rounded-2xl transition-all active:scale-90" title="Скинути всі перевірки" aria-label="Скинути всі перевірки">
+                    <i class="fa-solid fa-rotate-left text-base"></i>
+                </button>
+                <!-- Кнопка примусового оновлення -->
+                <button id="refresh-data-btn" class="w-11 h-11 flex items-center justify-center bg-white/10 text-white hover:bg-white/20 rounded-2xl transition-all active:scale-95" title="Оновити дані" aria-label="Оновити дані">
+                    <i class="fa-solid fa-rotate text-base"></i>
+                </button>
             </div>
         </div>
-        <div class="flex items-center gap-1">
-            <!-- Кнопка скидання переглянутих -->
-            <button id="reset-button" class="p-2.5 text-slate-400 hover:text-red-500 rounded-full transition-all active:scale-90" title="Показати всі приховані товари">
-                <i class="fa-solid fa-eye text-sm"></i>
-            </button>
-            <!-- Кнопка примусового оновлення -->
-            <button id="refresh-data-btn" class="p-2.5 bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 rounded-full transition-all active:scale-95" title="Оновити дані">
-                <i class="fa-solid fa-rotate text-xs"></i>
-            </button>
+        <!-- Прогрес обходу -->
+        <div class="mt-3 h-2 bg-white/10 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-orange-500 rounded-full transition-all duration-500" style="width: 0%"></div>
         </div>
     </header>
 
     <!-- Основний контейнер контенту -->
-    <main class="max-w-4xl mx-auto px-4 py-3">
+    <main class="max-w-4xl mx-auto px-3 py-3">
 
-        <!-- Секція пошуку -->
-        <section id="search-section" class="mb-4">
+        <!-- Секція пошуку + сортування -->
+        <section id="search-section" class="mb-3 space-y-2.5">
             <div class="relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-                <input id="search-input" type="text" placeholder="Пошук за артикулом, назвою чи ячейкою..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200/80 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm transition-all">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input id="search-input" type="text" inputmode="search" placeholder="Артикул, назва чи ячейка..." class="w-full pl-11 pr-11 py-3.5 bg-white border border-slate-200 rounded-2xl text-base font-semibold placeholder:text-slate-400 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm transition-all">
+                <button id="search-clear-btn" class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl" aria-label="Очистити пошук">
+                    <i class="fa-solid fa-circle-xmark text-base"></i>
+                </button>
+            </div>
+            <!-- Перемикач сортування: маршрут по ячейках чи за кількістю -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wide shrink-0">Маршрут:</span>
+                <div class="grid grid-cols-2 gap-1 bg-slate-200/70 p-1 rounded-2xl flex-1" id="sort-toggle">
+                    <button data-sort="cell" class="sort-btn py-2 rounded-xl text-sm font-bold transition-all bg-white shadow-sm text-slate-900">
+                        <i class="fa-solid fa-route text-xs mr-1 text-orange-500"></i>За ячейкою
+                    </button>
+                    <button data-sort="count" class="sort-btn py-2 rounded-xl text-sm font-bold transition-all text-slate-500">
+                        <i class="fa-solid fa-arrow-down-wide-short text-xs mr-1"></i>За кількістю
+                    </button>
+                </div>
             </div>
         </section>
 
         <!-- Дисплей Головного списку товарів -->
-        <section id="tab-list-content" class="active-tab-panel space-y-3">
-            
+        <section id="tab-list-content" class="active-tab-panel">
+
             <!-- Офлайн статус-індикатор -->
-            <div id="offline-status" class="hidden mb-3 bg-amber-50 border border-amber-100 text-amber-800 rounded-2xl p-3 text-xs flex items-center gap-2.5">
+            <div id="offline-status" class="hidden mb-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl px-4 py-3 text-sm flex items-center gap-3">
                 <i class="fa-solid fa-wifi-slash text-amber-500"></i>
-                <span class="font-bold">Працюємо офлайн. Посилання з кешу.</span>
+                <span class="font-bold">Працюємо офлайн. Дані з кешу.</span>
             </div>
 
             <!-- Loader -->
             <div id="loader" class="flex flex-col items-center justify-center py-24">
-                <div class="w-10 h-10 border-4 border-slate-100 border-t-cyan-500 rounded-full animate-spin"></div>
-                <p class="text-[10px] text-slate-400 mt-3 font-bold uppercase tracking-wider">Оновлення даних...</p>
+                <div class="w-10 h-10 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin"></div>
+                <p class="text-xs text-slate-400 mt-3 font-bold uppercase tracking-wider">Оновлення даних...</p>
             </div>
 
             <!-- Контейнер для списку товарів -->
             <div id="data-container" class="hidden">
-                <div id="mobile-cards-list" class="grid grid-cols-1 gap-2.5">
-                    <!-- Картки рендеритимуться динамічно -->
+                <!-- До перевірки -->
+                <div id="todo-section">
+                    <h2 id="todo-heading" class="text-xs font-black text-slate-500 uppercase tracking-wider px-1 mb-2">До перевірки</h2>
+                    <div id="todo-cards-list" class="grid grid-cols-1 gap-3 mb-5"></div>
+                </div>
+                <!-- Все перевірено -->
+                <div id="all-done-banner" class="hidden bg-emerald-50 border border-emerald-200 rounded-3xl px-5 py-8 text-center mb-5">
+                    <i class="fa-solid fa-clipboard-check text-4xl text-emerald-400 mb-2.5"></i>
+                    <p class="text-base font-black text-emerald-900">Всі ячейки перевірено</p>
+                    <p class="text-sm text-emerald-700 font-medium mt-1">Перейдіть у «Докидку», щоб надіслати список.</p>
+                </div>
+                <!-- Перевірено -->
+                <div id="done-section" class="hidden">
+                    <h2 id="done-heading" class="text-xs font-black text-slate-400 uppercase tracking-wider px-1 mb-2">Перевірено</h2>
+                    <div id="done-cards-list" class="grid grid-cols-1 gap-2"></div>
                 </div>
             </div>
         </section>
 
         <!-- Вкладка: Докидка відкладеного -->
         <section id="tab-dokydka-content" class="hidden space-y-3">
-            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
-                <div class="flex justify-between items-center border-b border-slate-50 pb-3 mb-3">
-                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider">
-                        <i class="fa-solid fa-boxes-packing text-emerald-500 mr-1.5"></i>Потрібно докинути
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200/60">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-wide">
+                        <i class="fa-solid fa-boxes-packing text-orange-500 mr-1.5"></i>Потрібно докинути
                     </h3>
-                    <span id="dokydka-badge-count" class="bg-emerald-50 text-emerald-700 text-[10px] font-black px-2.5 py-0.5 rounded-full">0</span>
+                    <span id="dokydka-badge-count" class="bg-orange-50 text-orange-700 text-xs font-black px-3 py-1 rounded-full">0</span>
                 </div>
 
                 <!-- Кнопки швидкої дії -->
                 <div class="grid grid-cols-1 gap-2 mb-4">
-                    <button id="send-to-sheets-btn" class="py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-98">
-                        <i class="fa-solid fa-cloud-arrow-up text-sm"></i> Надіслати в Google Таблицю
+                    <button id="send-to-sheets-btn" class="py-4 px-4 bg-orange-600 hover:bg-orange-700 text-white font-black rounded-2xl text-sm flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-[0.98]">
+                        <i class="fa-solid fa-cloud-arrow-up text-base"></i> Надіслати в Google Таблицю
                     </button>
-                    <button id="copy-dokydka-text-btn" class="py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 transition-all active:scale-98">
+                    <button id="copy-dokydka-text-btn" class="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
                         <i class="fa-solid fa-copy"></i> Копіювати текстом
                     </button>
                 </div>
 
                 <!-- Порожній стан -->
-                <div id="dokydka-list-empty" class="text-center py-16 text-slate-400 flex flex-col items-center justify-center gap-2">
-                    <i class="fa-solid fa-cart-plus text-3xl text-slate-200"></i>
-                    <p class="text-xs font-bold text-slate-700">Список докидки порожній</p>
-                    <p class="text-[10px] text-slate-400 max-w-[220px] mx-auto leading-relaxed">Позначайте галочкою товари в загальному списку під час обходу ячейок.</p>
+                <div id="dokydka-list-empty" class="text-center py-16 text-slate-400 flex flex-col items-center justify-center gap-2.5">
+                    <i class="fa-solid fa-cart-plus text-4xl text-slate-200"></i>
+                    <p class="text-sm font-bold text-slate-700">Список докидки порожній</p>
+                    <p class="text-xs text-slate-400 max-w-[260px] mx-auto leading-relaxed">Натискайте «Докинути» на картках під час обходу ячейок — товари з’являться тут.</p>
                 </div>
 
                 <div id="dokydka-list-wrapper" class="hidden space-y-2">
@@ -152,18 +187,18 @@
             </div>
 
             <!-- Мінімалістична панель налаштувань веб-додатку -->
-            <div class="bg-slate-100 p-4 rounded-3xl border border-slate-200/50">
-                <button id="toggle-settings-btn" class="w-full flex items-center justify-between text-slate-600 font-bold text-[10px] uppercase tracking-wider focus:outline-none">
-                    <span><i class="fa-solid fa-gears mr-1 text-cyan-600"></i> Інтеграція з таблицею</span>
+            <div class="bg-slate-200/50 p-4 rounded-3xl border border-slate-200">
+                <button id="toggle-settings-btn" class="w-full flex items-center justify-between py-1 text-slate-600 font-bold text-xs uppercase tracking-wider focus:outline-none">
+                    <span><i class="fa-solid fa-gears mr-1.5 text-orange-600"></i> Інтеграція з таблицею</span>
                     <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200" id="settings-chevron"></i>
                 </button>
-                
-                <div id="settings-panel" class="hidden mt-3 space-y-3 pt-3 border-t border-slate-200 text-xs text-slate-500">
+
+                <div id="settings-panel" class="hidden mt-3 space-y-3 pt-3 border-t border-slate-300/60 text-sm text-slate-500">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Apps Script Web App URL:</label>
-                        <input id="apps-script-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none font-mono font-bold">
+                        <label class="block font-bold text-slate-700 mb-1.5 text-xs">Apps Script Web App URL:</label>
+                        <input id="apps-script-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-base focus:ring-2 focus:ring-orange-500 focus:outline-none font-mono">
                     </div>
-                    <button id="copy-script-code-btn" class="w-full py-2 px-3 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold rounded-xl text-[10px] transition-all flex items-center justify-center gap-1.5">
+                    <button id="copy-script-code-btn" class="w-full py-3 px-3 bg-white hover:bg-orange-50 text-orange-700 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 border border-orange-200/60">
                         <i class="fa-solid fa-paste"></i> Скопіювати код скрипта для Apps Script
                     </button>
                 </div>
@@ -173,36 +208,36 @@
     </main>
 
     <!-- Нижнє мобільне меню навігації -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 px-8 py-2.5 flex justify-around items-center z-40 shadow-lg transition-all">
-        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1 text-cyan-600 w-24" data-target="list">
-            <i class="fa-solid fa-list-check text-lg"></i>
-            <span class="text-[10px] font-black">Товари</span>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-8 pt-2 pb-2.5 flex justify-around items-center z-40 shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
+        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1.5 min-h-[52px] text-slate-900 w-28 rounded-2xl" data-target="list">
+            <i class="fa-solid fa-list-check text-xl"></i>
+            <span class="text-xs font-black">Перевірка</span>
         </button>
-        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1 text-slate-400 hover:text-slate-600 relative w-24" data-target="dokydka">
-            <i class="fa-solid fa-boxes-packing text-lg"></i>
-            <span class="text-[10px] font-medium">Докидка</span>
-            <span id="nav-dokydka-count-badge" class="hidden absolute top-0.5 right-4 w-4.5 h-4.5 bg-emerald-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">0</span>
+        <button class="nav-tab-btn flex flex-col items-center justify-center gap-1 py-1.5 min-h-[52px] text-slate-400 hover:text-slate-600 relative w-28 rounded-2xl" data-target="dokydka">
+            <i class="fa-solid fa-boxes-packing text-xl"></i>
+            <span class="text-xs font-medium">Докидка</span>
+            <span id="nav-dokydka-count-badge" class="hidden absolute top-0 right-5 min-w-[20px] h-5 px-1 bg-orange-600 text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white">0</span>
         </button>
     </nav>
 
     <!-- Вбудована модалка для підтверджень -->
     <div id="confirm-modal" class="fixed inset-0 bg-black/60 z-50 transition-opacity duration-200 opacity-0 pointer-events-none flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-5 max-w-xs w-full transform scale-95 transition-transform duration-200 shadow-xl flex flex-col gap-3.5">
+        <div class="bg-white rounded-3xl p-5 max-w-xs w-full transform scale-95 transition-transform duration-200 shadow-xl flex flex-col gap-4">
             <div class="text-center">
-                <h3 id="confirm-title" class="text-sm font-black text-slate-900">Підтвердження</h3>
-                <p id="confirm-desc" class="text-xs text-slate-400 mt-1 leading-relaxed">Дія незворотна.</p>
+                <h3 id="confirm-title" class="text-base font-black text-slate-900">Підтвердження</h3>
+                <p id="confirm-desc" class="text-sm text-slate-500 mt-1.5 leading-relaxed">Дія незворотна.</p>
             </div>
             <div class="flex gap-2">
-                <button id="confirm-cancel-btn" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all active:scale-95">Скасувати</button>
-                <button id="confirm-ok-btn" class="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-xs transition-all active:scale-95">Ок</button>
+                <button id="confirm-cancel-btn" class="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-sm transition-all active:scale-95">Скасувати</button>
+                <button id="confirm-ok-btn" class="flex-1 py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-2xl text-sm transition-all active:scale-95">Ок</button>
             </div>
         </div>
     </div>
 
     <!-- Сповіщення (Toast) -->
-    <div id="toast-message" class="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 bg-slate-900 text-white px-4.5 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 transition-transform duration-300 translate-y-32 z-50 md:max-w-xs">
-        <i id="toast-icon" class="fa-solid fa-info text-cyan-400"></i>
-        <p id="toast-text" class="text-xs font-bold leading-snug"></p>
+    <div id="toast-message" class="fixed bottom-24 left-4 right-4 md:left-auto md:right-6 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 transition-transform duration-300 translate-y-40 z-50 md:max-w-xs">
+        <i id="toast-icon" class="fa-solid fa-info text-orange-400 text-base"></i>
+        <p id="toast-text" class="text-sm font-bold leading-snug"></p>
     </div>
 
     <!-- JS Логіка -->
@@ -224,12 +259,16 @@
             inCell: 'В ячейці'
         };
 
-        const BTN_HIDE = 'Приховати';
-        const BTN_SHOW = 'Показати';
-
         document.addEventListener('DOMContentLoaded', () => {
-            const mobileCardsList = document.getElementById('mobile-cards-list');
-            const uniqueArticlesCountSpan = document.getElementById('header-stats-text');
+            const todoCardsList = document.getElementById('todo-cards-list');
+            const doneCardsList = document.getElementById('done-cards-list');
+            const todoSection = document.getElementById('todo-section');
+            const todoHeading = document.getElementById('todo-heading');
+            const doneSection = document.getElementById('done-section');
+            const doneHeading = document.getElementById('done-heading');
+            const allDoneBanner = document.getElementById('all-done-banner');
+            const headerStatsText = document.getElementById('header-stats-text');
+            const progressBar = document.getElementById('progress-bar');
             const resetButton = document.getElementById('reset-button');
             const loader = document.getElementById('loader');
             const dataContainer = document.getElementById('data-container');
@@ -243,16 +282,16 @@
                 "start_url": ".",
                 "display": "standalone",
                 "background_color": "#ffffff",
-                "theme_color": "#ffffff",
+                "theme_color": "#0f172a",
                 "icons": [
                     {
-                        "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231ca5d6'/><text y='0.75em' x='16' font-size='60'>📥</text></svg>",
+                        "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ea580c'/><text y='0.75em' x='16' font-size='60'>📥</text></svg>",
                         "sizes": "192x192",
                         "type": "image/svg+xml",
                         "purpose": "any"
                     },
                     {
-                        "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231ca5d6'/><text y='0.75em' x='16' font-size='60'>📥</text></svg>",
+                        "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ea580c'/><text y='0.75em' x='16' font-size='60'>📥</text></svg>",
                         "sizes": "512x512",
                         "type": "image/svg+xml",
                         "purpose": "maskable"
@@ -265,6 +304,9 @@
 
             let allUniqueRows = [];
             let searchQuery = '';
+            let sortMode = localStorage.getItem('sort_mode_v1') || 'cell';
+            let isApplyingRemote = false;   // true, поки застосовуємо стан із сервера (щоб не зациклити запис)
+            let pushTimer = null;           // таймер дебаунсу для запису стану
 
             // Поточна дата
             const todayFormatted = new Date().toLocaleDateString('uk-UA', {
@@ -282,14 +324,26 @@
             window.addEventListener('offline', updateOnlineStatus);
             updateOnlineStatus();
 
-            // LocalStorage
+            // LocalStorage: «Все є» (перевірено, докидка не потрібна)
             function saveSeenArticles(articles) {
                 localStorage.setItem('seenArticles_v3', JSON.stringify(articles));
+                if (!isApplyingRemote) schedulePush();
             }
 
             function getSeenArticles() {
                 const seen = localStorage.getItem('seenArticles_v3');
                 return seen ? JSON.parse(seen) : [];
+            }
+
+            // LocalStorage: артикули, вже надіслані в Таблицю (докидка оброблена)
+            function saveSentArticles(articles) {
+                localStorage.setItem('sentArticles_v3', JSON.stringify(articles));
+                if (!isApplyingRemote) schedulePush();
+            }
+
+            function getSentArticles() {
+                const sent = localStorage.getItem('sentArticles_v3');
+                return sent ? JSON.parse(sent) : [];
             }
 
             function saveCachedData(data) {
@@ -309,6 +363,117 @@
             function saveDokydkaItems(items) {
                 localStorage.setItem('dokydka_items_v2', JSON.stringify(items));
                 updateDokydkaInterface();
+                if (!isApplyingRemote) schedulePush();
+            }
+
+            // ===================== СИНХРОНІЗАЦІЯ МІЖ ПРИСТРОЯМИ =====================
+            // Стан (перевірено / надіслано / список докидки) зберігається у тій самій
+            // Google-таблиці через Apps Script. Локальний інтерфейс реагує миттєво,
+            // а синхронізація відбувається у фоні: пишемо при кожній зміні, читаємо
+            // при відкритті та поверненні на вкладку.
+
+            function setSyncStatus(state) {
+                const el = document.getElementById('sync-status');
+                if (!el) return;
+                const icon = el.querySelector('i');
+                el.classList.remove('text-slate-400', 'text-emerald-400', 'text-amber-400', 'text-rose-400');
+                if (state === 'pending' || state === 'syncing') {
+                    icon.className = 'fa-solid fa-cloud-arrow-up text-sm fa-fade';
+                    el.classList.add('text-amber-400');
+                    el.title = 'Синхронізація…';
+                } else if (state === 'ok') {
+                    icon.className = 'fa-solid fa-cloud text-sm';
+                    el.classList.add('text-emerald-400');
+                    el.title = 'Синхронізовано з таблицею';
+                } else if (state === 'error') {
+                    icon.className = 'fa-solid fa-cloud-arrow-up text-sm';
+                    el.classList.add('text-rose-400');
+                    el.title = 'Немає звʼязку — збережено локально, синхронізується пізніше';
+                } else {
+                    icon.className = 'fa-solid fa-cloud text-sm';
+                    el.classList.add('text-slate-400');
+                    el.title = 'Синхронізація';
+                }
+            }
+
+            // Поточний стан одним обʼєктом
+            function buildStateBlob() {
+                return {
+                    seen: getSeenArticles(),
+                    sent: getSentArticles(),
+                    dokydka: getDokydkaItems()
+                };
+            }
+
+            // Запланувати запис (із дебаунсом: кілька змін підряд = один запит)
+            function schedulePush() {
+                setSyncStatus('pending');
+                if (pushTimer) clearTimeout(pushTimer);
+                pushTimer = setTimeout(pushStateNow, 700);
+            }
+
+            // Записати стан у таблицю
+            async function pushStateNow() {
+                pushTimer = null;
+                const url = localStorage.getItem('apps_script_url_v2') || DEFAULT_APPS_SCRIPT_URL;
+                if (!url) return;
+                setSyncStatus('syncing');
+                try {
+                    // text/plain уникає CORS-preflight, але дозволяє прочитати відповідь
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'saveState', state: buildStateBlob() })
+                    });
+                    const data = await res.json();
+                    if (data && data.status === 'success') {
+                        if (data.savedAt) localStorage.setItem('sync_last_savedAt', String(data.savedAt));
+                        setSyncStatus('ok');
+                    } else {
+                        setSyncStatus('error');
+                    }
+                } catch (e) {
+                    console.warn('Sync push failed:', e.message);
+                    setSyncStatus('error');
+                }
+            }
+
+            // Застосувати стан, отриманий із сервера (без зворотного запису)
+            function applyRemoteState(serverState, serverSavedAt) {
+                isApplyingRemote = true;
+                try {
+                    localStorage.setItem('seenArticles_v3', JSON.stringify(serverState.seen || []));
+                    localStorage.setItem('sentArticles_v3', JSON.stringify(serverState.sent || []));
+                    localStorage.setItem('dokydka_items_v2', JSON.stringify(serverState.dokydka || []));
+                } finally {
+                    isApplyingRemote = false;
+                }
+                localStorage.setItem('sync_last_savedAt', String(serverSavedAt || 0));
+                renderAll(allUniqueRows);
+                updateDokydkaInterface();
+            }
+
+            // Прочитати стан із таблиці й застосувати, якщо він новіший за наш
+            async function pullState(notify) {
+                if (!navigator.onLine) return;
+                const url = localStorage.getItem('apps_script_url_v2') || DEFAULT_APPS_SCRIPT_URL;
+                if (!url) return;
+                setSyncStatus('syncing');
+                try {
+                    const sep = url.includes('?') ? '&' : '?';
+                    const res = await fetch(url + sep + 'action=loadState');
+                    const data = await res.json();
+                    setSyncStatus('ok');
+                    if (!data || !data.state) return;
+                    const localApplied = parseInt(localStorage.getItem('sync_last_savedAt') || '0', 10);
+                    if ((data.savedAt || 0) > localApplied) {
+                        applyRemoteState(data.state, data.savedAt);
+                        if (notify) showToast('Синхронізовано з іншим пристроєм', 'info');
+                    }
+                } catch (e) {
+                    console.warn('Sync pull failed:', e.message);
+                    setSyncStatus('error');
+                }
             }
 
             // Налаштування Apps Script URL
@@ -342,27 +507,25 @@
                 const icon = document.getElementById('toast-icon');
 
                 text.textContent = message;
-                if (type === 'error') icon.className = 'fa-solid fa-circle-exclamation text-rose-400';
-                else if (type === 'success') icon.className = 'fa-solid fa-circle-check text-emerald-400';
-                else icon.className = 'fa-solid fa-circle-info text-cyan-400';
+                if (type === 'error') icon.className = 'fa-solid fa-circle-exclamation text-rose-400 text-base';
+                else if (type === 'success') icon.className = 'fa-solid fa-circle-check text-emerald-400 text-base';
+                else icon.className = 'fa-solid fa-circle-info text-orange-400 text-base';
 
-                toast.classList.remove('translate-y-32');
+                toast.classList.remove('translate-y-40');
                 toast.classList.add('translate-y-0');
 
                 setTimeout(() => {
                     toast.classList.remove('translate-y-0');
-                    toast.classList.add('translate-y-32');
+                    toast.classList.add('translate-y-40');
                 }, 3000);
             }
 
-            // Вбудована красива модалка підтвердження
+            // Вбудована модалка підтвердження
             let onConfirmCallback = null;
             function showConfirm(title, desc, onConfirm) {
                 const modal = document.getElementById('confirm-modal');
-                const t = document.getElementById('confirm-title');
-                const d = document.getElementById('confirm-desc');
-                t.textContent = title;
-                d.textContent = desc;
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-desc').textContent = desc;
                 onConfirmCallback = onConfirm;
                 modal.classList.remove('pointer-events-none', 'opacity-0');
                 modal.querySelector('div').classList.remove('scale-95');
@@ -384,16 +547,19 @@
             // Помилка завантаження
             function showError(message) {
                 loader.classList.add('hidden');
-                dataContainer.innerHTML = `
-                    <div class="bg-rose-50 border border-rose-100 text-rose-800 rounded-3xl p-5 text-xs flex flex-col items-center gap-3">
-                        <i class="fa-solid fa-triangle-exclamation text-xl text-rose-500"></i>
+                todoCardsList.innerHTML = `
+                    <div class="bg-rose-50 border border-rose-100 text-rose-800 rounded-3xl p-5 text-sm flex flex-col items-center gap-3">
+                        <i class="fa-solid fa-triangle-exclamation text-2xl text-rose-500"></i>
                         <p class="font-bold text-center">Не вдалося завантажити дані з Google Sheets</p>
-                        <p class="text-[10px] text-rose-500 text-center">${message}</p>
-                        <button onclick="window.location.reload()" class="mt-1 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-[10px] transition-all">
+                        <p class="text-xs text-rose-500 text-center">${message}</p>
+                        <button onclick="window.location.reload()" class="mt-1 px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-sm transition-all">
                             Спробувати ще раз
                         </button>
                     </div>
                 `;
+                todoHeading.classList.add('hidden');
+                doneSection.classList.add('hidden');
+                allDoneBanner.classList.add('hidden');
                 dataContainer.classList.remove('hidden');
             }
 
@@ -414,18 +580,62 @@
                 return indices;
             }
 
-            // Логіка Докидки
-            function toggleDokydkaItem(item) {
+            // --- Статуси перевірки ---
+            // 'todo'    — ще не перевірено (або знову відклали після перевірки)
+            // 'ok'      — перевірено, все є (помилка збиральника)
+            // 'dokydka' — перевірено, потрібно докинути (ще в списку, не надіслано)
+            // 'sent'    — докидку вже надіслано в Таблицю
+            function getItemStatus(item, seenMap, dokydkaItems, sentMap) {
+                if (dokydkaItems.some(di => di.article === item.article)) {
+                    return { status: 'dokydka', isUpdated: false };
+                }
+                if (sentMap.has(item.article)) {
+                    const sentTime = sentMap.get(item.article) || 0;
+                    if (item.lastTimestamp > sentTime) {
+                        return { status: 'todo', isUpdated: true };
+                    }
+                    return { status: 'sent', isUpdated: false };
+                }
+                if (seenMap.has(item.article)) {
+                    const seenTime = seenMap.get(item.article) || 0;
+                    if (item.lastTimestamp > seenTime) {
+                        return { status: 'todo', isUpdated: true };
+                    }
+                    return { status: 'ok', isUpdated: false };
+                }
+                return { status: 'todo', isUpdated: false };
+            }
+
+            // Позначити «Все є»
+            function markOk(article) {
+                let seen = getSeenArticles();
+                seen = seen.filter(i => i.article !== article);
+                seen.push({ article, seenTime: Date.now() });
+                saveSeenArticles(seen);
+                showToast(`${article}: все є, докидка не потрібна`, 'success');
+                renderAll(allUniqueRows);
+            }
+
+            // Позначити «Докинути»
+            function markDokydka(item) {
                 let current = getDokydkaItems();
-                const exists = current.some(i => i.article === item.article);
-                if (exists) {
-                    current = current.filter(i => i.article !== item.article);
-                    showToast(`Прибрано: ${item.article}`, 'info');
-                } else {
+                if (!current.some(i => i.article === item.article)) {
                     current.push(item);
-                    showToast(`Додано в докидку: ${item.article}`, 'success');
                 }
                 saveDokydkaItems(current);
+                showToast(`${item.article}: додано в докидку`, 'success');
+                renderAll(allUniqueRows);
+            }
+
+            // Повернути на перевірку
+            function undoCheck(article) {
+                let seen = getSeenArticles().filter(i => i.article !== article);
+                saveSeenArticles(seen);
+                let sent = getSentArticles().filter(i => i.article !== article);
+                saveSentArticles(sent);
+                const dokydka = getDokydkaItems().filter(i => i.article !== article);
+                saveDokydkaItems(dokydka);
+                showToast(`${article}: повернуто на перевірку`, 'info');
                 renderAll(allUniqueRows);
             }
 
@@ -459,21 +669,20 @@
 
                 items.forEach((item, index) => {
                     const row = document.createElement('div');
-                    row.className = 'bg-slate-50 border border-slate-100 p-3 rounded-2xl flex items-center justify-between gap-3';
+                    row.className = 'bg-slate-50 border border-slate-200/60 p-3.5 rounded-2xl flex items-center justify-between gap-3';
                     row.innerHTML = `
-                        <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xs font-black text-slate-900 select-all">${item.article}</span>
-                                <span class="text-[9px] bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded">Яч: ${item.cell}</span>
+                        <div class="flex flex-col gap-1 min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-xs bg-slate-900 text-white font-bold px-2 py-0.5 rounded-lg">Яч: ${item.cell || '—'}</span>
+                                <span class="text-base font-black text-slate-900 select-all">${item.article}</span>
+                                <span class="text-xs font-black bg-orange-100 text-orange-800 px-2 py-0.5 rounded-lg">${item.count} шт</span>
                             </div>
-                            <span class="text-[11px] text-slate-500 font-medium truncate block">${item.name}</span>
+                            <span class="text-sm text-slate-500 font-medium truncate block">${item.name}</span>
+                            ${item.stock ? `<span class="text-xs text-purple-600 font-bold">Запас: ${item.stock}${item.pallet ? ' · Пал: ' + item.pallet : ''}</span>` : ''}
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-black bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-lg">К-сть: ${item.count}</span>
-                            <button class="remove-dokydka-btn text-slate-400 hover:text-red-500 p-2 text-base" data-index="${index}">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
+                        <button class="remove-dokydka-btn shrink-0 w-11 h-11 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl text-base transition-all" data-index="${index}" aria-label="Вилучити зі списку">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     `;
                     listWrapper.appendChild(row);
                 });
@@ -494,7 +703,7 @@
             document.getElementById('copy-dokydka-text-btn').addEventListener('click', () => {
                 const items = getDokydkaItems();
                 if (items.length === 0) return;
-                
+
                 let text = "ДОКИДКА ВІДКЛАДЕНОГО\n\n";
                 items.forEach((item, idx) => {
                     text += `${idx + 1}. Артикул: ${item.article} | Ячейка: ${item.cell} | К-сть: ${item.count}\n`;
@@ -527,15 +736,31 @@
                     btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Відправка...`;
 
                     try {
-                        await fetch(url, {
+                        // text/plain уникає CORS-preflight і дозволяє прочитати відповідь сервера
+                        const res = await fetch(url, {
                             method: 'POST',
-                            mode: 'no-cors',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(items)
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({ action: 'dokydkaLog', items: items })
                         });
+                        const data = await res.json();
+                        if (!data || data.status !== 'success') {
+                            throw new Error(data && data.message ? data.message : 'Сервер повернув помилку');
+                        }
 
                         showToast('Успішно надіслано в Таблицю!', 'success');
-                        saveDokydkaItems([]);
+
+                        // Запам'ятовуємо надіслані артикули, щоб вони не повернулись
+                        // у «До перевірки» після очищення списку докидки.
+                        const sent = getSentArticles();
+                        const now = Date.now();
+                        items.forEach(it => {
+                            if (!sent.some(s => s.article === it.article)) {
+                                sent.push({ article: it.article, sentTime: now });
+                            }
+                        });
+                        saveSentArticles(sent);   // оновлює стан + синхронізує
+
+                        saveDokydkaItems([]);     // очищує список + синхронізує
                         renderAll(allUniqueRows);
 
                     } catch (error) {
@@ -548,208 +773,298 @@
                 });
             });
 
-            // Рендер карток товарів
+            // Природне сортування ячейок (А-1, А-2, А-10)
+            function compareCells(a, b) {
+                return String(a.cell || '').localeCompare(String(b.cell || ''), 'uk', { numeric: true, sensitivity: 'base' });
+            }
+
+            // Відмінок слова за числом (1 артикул / 2 артикули / 5 артикулів)
+            function pluralUk(n, one, few, many) {
+                const m10 = n % 10, m100 = n % 100;
+                if (m10 === 1 && m100 !== 11) return one;
+                if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+                return many;
+            }
+
+            // Прогрес у шапці
+            function updateProgress(total, doneCount) {
+                if (total === 0) {
+                    headerStatsText.textContent = 'За сьогодні нічого не відкладали';
+                    progressBar.style.width = '0%';
+                    return;
+                }
+                const remaining = total - doneCount;
+                const word = pluralUk(total, 'артикул', 'артикули', 'артикулів');
+                if (remaining <= 0) {
+                    headerStatsText.textContent = `Усі ${total} ${word} перевірено`;
+                } else {
+                    headerStatsText.textContent = `Залишилось перевірити ${remaining} з ${total} ${word}`;
+                }
+                progressBar.style.width = `${Math.round((doneCount / total) * 100)}%`;
+            }
+
+            // Повна картка «до перевірки»
+            function buildTodoCard(item, isUpdated) {
+                const inCellVal = parseFloat(item.inCell) || 0;
+                const countVal = parseFloat(item.count) || 0;
+                const isLiftedToday = item.liftedBy === todayFormatted;
+
+                // Динамічний колір для "В ячейці"
+                let inCellColorClass = 'bg-emerald-50 text-emerald-800 border-emerald-200/60';
+                if (inCellVal <= 0) {
+                    inCellColorClass = 'bg-rose-50 text-rose-700 border-rose-200/60';
+                } else if (inCellVal < countVal) {
+                    inCellColorClass = 'bg-amber-50 text-amber-700 border-amber-200/60';
+                }
+
+                let liftStatusHtml = '';
+                if (isLiftedToday) {
+                    liftStatusHtml = `
+                        <div class="text-xs font-bold text-emerald-700 flex items-center gap-2">
+                            <span class="relative flex h-2 w-2 shrink-0">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <span>Піднято сьогодні о ${item.liftedTime || '—'} (${item.liftedBy})</span>
+                        </div>
+                    `;
+                } else {
+                    liftStatusHtml = `
+                        <div class="text-xs font-semibold text-slate-500 flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full bg-slate-300 shrink-0"></span>
+                            <span class="truncate">Піднімали раніше: ${item.liftedBy || '—'} (${item.liftedTime || '—'})</span>
+                        </div>
+                    `;
+                }
+
+                const updatedBadge = isUpdated ? `
+                    <div class="bg-rose-50 text-rose-700 text-xs font-black px-3.5 py-2.5 rounded-2xl border border-rose-200 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Знову відклали після вашої перевірки!</span>
+                    </div>
+                ` : '';
+
+                const card = document.createElement('div');
+                card.className = `bg-white p-4 rounded-3xl shadow-sm border border-slate-200/60 flex flex-col gap-3 ${isUpdated ? 'updated-row' : ''}`;
+                card.setAttribute('data-article', item.article);
+
+                card.innerHTML = `
+                    ${updatedBadge}
+
+                    <!-- Ячейка (ключ маршруту) + Артикул -->
+                    <div class="flex items-stretch gap-3">
+                        <div class="bg-slate-900 text-white rounded-2xl px-4 py-2.5 flex flex-col items-center justify-center shrink-0 min-w-[88px]">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Ячейка</span>
+                            <span class="text-2xl font-black tracking-tight select-all leading-tight">${item.cell || '—'}</span>
+                        </div>
+                        <div class="flex flex-col justify-center min-w-0">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Артикул</span>
+                            <span class="text-lg font-black text-slate-900 tracking-tight select-all leading-tight">${item.article}</span>
+                            <span class="text-sm font-semibold text-slate-600 line-clamp-2 leading-snug mt-0.5">${item.name}</span>
+                        </div>
+                    </div>
+
+                    <!-- Цифри: ВІДКЛАЛИ | В ЯЧЕЙЦІ (по системі) | ЗАПАС -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-slate-50 rounded-2xl px-2 py-3 border border-slate-200/60 text-center flex flex-col justify-center">
+                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-wide block mb-0.5">Відклали</span>
+                            <span class="text-xl font-black text-slate-900 leading-none">${item.count}<span class="text-xs font-bold text-slate-400 ml-0.5">шт</span></span>
+                        </div>
+                        <div class="rounded-2xl px-2 py-3 border text-center flex flex-col justify-center ${inCellColorClass}">
+                            <span class="text-[10px] font-black uppercase tracking-wide block mb-0.5">В ячейці</span>
+                            <span class="text-xl font-black leading-none">${item.inCell || '0'}<span class="text-xs font-bold opacity-60 ml-0.5">шт</span></span>
+                        </div>
+                        <div class="bg-purple-50/60 rounded-2xl px-2 py-3 border border-purple-100 text-center flex flex-col justify-center min-w-0">
+                            <span class="text-[10px] font-black text-purple-600 uppercase tracking-wide block mb-0.5">Запас</span>
+                            <span class="text-sm font-black text-purple-900 truncate block leading-tight">${item.stock ? item.stock : 'Немає'}</span>
+                            ${item.stock && item.pallet ? `<span class="text-[10px] font-bold text-purple-500 block truncate mt-0.5">Пал: ${item.pallet}</span>` : ''}
+                        </div>
+                    </div>
+
+                    ${liftStatusHtml}
+
+                    <!-- Рішення: Все є / Докинути -->
+                    <div class="grid grid-cols-2 gap-2 pt-0.5">
+                        <button class="ok-btn h-14 rounded-2xl text-sm font-black flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 transition-all active:scale-[0.97]">
+                            <i class="fa-solid fa-check text-emerald-500"></i>
+                            <span>Все є</span>
+                        </button>
+                        <button class="dokydka-btn h-14 rounded-2xl text-sm font-black flex items-center justify-center gap-2 bg-orange-600 text-white shadow-sm hover:bg-orange-700 transition-all active:scale-[0.97]">
+                            <i class="fa-solid fa-boxes-packing"></i>
+                            <span>Докинути</span>
+                        </button>
+                    </div>
+                `;
+                return card;
+            }
+
+            // Компактний рядок «перевірено»
+            function buildDoneRow(item, status) {
+                // Вигляд за статусом: все є / у списку докидки / надіслано
+                let iconClass, badgeClass, labelClass, labelText;
+                if (status === 'ok') {
+                    iconClass = 'fa-check';
+                    badgeClass = 'bg-emerald-100 text-emerald-600';
+                    labelClass = 'text-emerald-600';
+                    labelText = 'Все є — помилка збиральника';
+                } else if (status === 'sent') {
+                    iconClass = 'fa-cloud-arrow-up';
+                    badgeClass = 'bg-sky-100 text-sky-600';
+                    labelClass = 'text-sky-600';
+                    labelText = 'Докинуто й надіслано в таблицю';
+                } else {
+                    iconClass = 'fa-boxes-packing';
+                    badgeClass = 'bg-orange-100 text-orange-600';
+                    labelClass = 'text-orange-600';
+                    labelText = 'У списку докидки';
+                }
+                const row = document.createElement('div');
+                row.className = 'bg-white/70 border border-slate-200/60 px-3.5 py-3 rounded-2xl flex items-center gap-3 opacity-80';
+                row.setAttribute('data-article', item.article);
+                row.innerHTML = `
+                    <span class="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${badgeClass}">
+                        <i class="fa-solid ${iconClass} text-sm"></i>
+                    </span>
+                    <div class="flex flex-col min-w-0 flex-1">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-xs bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded shrink-0">${item.cell || '—'}</span>
+                            <span class="text-sm font-black text-slate-700 truncate">${item.article}</span>
+                        </div>
+                        <span class="text-xs font-bold ${labelClass}">${labelText}</span>
+                    </div>
+                    <button class="undo-btn shrink-0 w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-2xl transition-all" title="Повернути на перевірку" aria-label="Повернути на перевірку">
+                        <i class="fa-solid fa-rotate-left text-sm"></i>
+                    </button>
+                `;
+                return row;
+            }
+
+            // Рендер усього списку
             function renderAll(rows) {
                 let filteredRows = [...rows];
 
                 // Пошук
                 if (searchQuery.trim() !== '') {
                     const query = searchQuery.toLowerCase().trim();
-                    filteredRows = filteredRows.filter(item => 
-                        item.article.toLowerCase().includes(query) || 
+                    filteredRows = filteredRows.filter(item =>
+                        item.article.toLowerCase().includes(query) ||
                         item.name.toLowerCase().includes(query) ||
                         item.cell.toLowerCase().includes(query)
                     );
                 }
 
-                // СОРТУВАННЯ: від найбільшої кількості відкладеного до найменшої (b.count - a.count)
-                filteredRows.sort((a, b) => b.count - a.count);
+                const seenList = getSeenArticles();
+                const seenMap = new Map(seenList.map(i => [i.article, i.seenTime]));
+                const sentList = getSentArticles();
+                const sentMap = new Map(sentList.map(i => [i.article, i.sentTime]));
+                const dokydkaItems = getDokydkaItems();
 
-                if (filteredRows.length === 0) {
-                    const emptyStateHtml = `
-                        <div class="text-center py-16 text-slate-400 flex flex-col items-center justify-center gap-2">
-                            <i class="fa-solid fa-box-open text-3xl text-slate-200"></i>
-                            <p class="text-xs font-bold text-slate-600">Нічого не знайдено</p>
+                const todoItems = [];
+                const doneItems = [];
+
+                filteredRows.forEach(item => {
+                    const { status, isUpdated } = getItemStatus(item, seenMap, dokydkaItems, sentMap);
+                    if (status === 'todo') todoItems.push({ item, isUpdated });
+                    else doneItems.push({ item, status });
+                });
+
+                // Сортування: оновлені (повернуті) завжди зверху, далі за маршрутом або кількістю
+                todoItems.sort((a, b) => {
+                    if (a.isUpdated !== b.isUpdated) return a.isUpdated ? -1 : 1;
+                    if (sortMode === 'count') return b.item.count - a.item.count;
+                    return compareCells(a.item, b.item);
+                });
+                doneItems.sort((a, b) => compareCells(a.item, b.item));
+
+                // Прогрес по всіх (без урахування пошуку)
+                const allSeenDone = rows.filter(item => {
+                    const { status } = getItemStatus(item, seenMap, dokydkaItems, sentMap);
+                    return status !== 'todo';
+                }).length;
+                updateProgress(rows.length, allSeenDone);
+
+                // Рендер
+                todoCardsList.innerHTML = '';
+                doneCardsList.innerHTML = '';
+
+                if (todoItems.length === 0 && doneItems.length === 0) {
+                    todoHeading.classList.add('hidden');
+                    allDoneBanner.classList.add('hidden');
+                    doneSection.classList.add('hidden');
+                    todoCardsList.innerHTML = `
+                        <div class="text-center py-16 text-slate-400 flex flex-col items-center justify-center gap-2.5">
+                            <i class="fa-solid fa-box-open text-4xl text-slate-200"></i>
+                            <p class="text-sm font-bold text-slate-600">Нічого не знайдено</p>
                         </div>
                     `;
-                    mobileCardsList.innerHTML = emptyStateHtml;
                     return;
                 }
 
-                const seenList = getSeenArticles();
-                const seenMap = new Map(seenList.map(i => [i.article, i.seenTime]));
-                const dokydkaItems = getDokydkaItems();
-
-                mobileCardsList.innerHTML = '';
-
-                const regularItems = [];
-                const seenItems = [];
-
-                filteredRows.forEach(item => {
-                    const isSeen = seenMap.has(item.article);
-                    const seenTime = seenMap.get(item.article) || 0;
-                    
-                    let rowStateClass = '';
-                    let isUpdated = false;
-
-                    if (isSeen) {
-                        if (item.lastTimestamp > seenTime) {
-                            rowStateClass = 'updated-row';
-                            isUpdated = true;
-                            regularItems.push({ item, rowStateClass, isSeen: false, isUpdated });
-                        } else {
-                            rowStateClass = 'seen-row';
-                            seenItems.push({ item, rowStateClass, isSeen: true, isUpdated });
-                        }
-                    } else {
-                        regularItems.push({ item, rowStateClass, isSeen: false, isUpdated });
-                    }
-                });
-
-                const finalRenderSequence = [...regularItems, ...seenItems];
-
-                finalRenderSequence.forEach(({ item, rowStateClass, isSeen, isUpdated }) => {
-                    const isInDokydka = dokydkaItems.some(di => di.article === item.article);
-                    const isLiftedToday = item.liftedBy === todayFormatted;
-
-                    // Парсимо числові значення для розумного дефіциту та добору
-                    const inCellVal = parseFloat(item.inCell) || 0;
-                    const countVal = parseFloat(item.count) || 0;
-
-                    // Динамічний колір для "В ячейці"
-                    let inCellColorClass = 'bg-slate-100 text-slate-700 border-slate-200';
-                    if (inCellVal <= 0) {
-                        inCellColorClass = 'bg-rose-50 text-rose-700 border-rose-200/60 font-black';
-                    } else if (inCellVal < countVal) {
-                        inCellColorClass = 'bg-amber-50 text-amber-700 border-amber-200/60 font-black';
-                    } else {
-                        inCellColorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200/60 font-black';
-                    }
-
-                    // Великий, привабливий та інформативний блок підйомів (Піднімали)
-                    let liftStatusHtml = '';
-                    if (isLiftedToday) {
-                        liftStatusHtml = `
-                            <div class="bg-emerald-50 text-emerald-800 text-xs font-bold px-3 py-2 rounded-2xl border border-emerald-100/80 flex items-center gap-2 w-full">
-                                <span class="relative flex h-2 w-2">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                </span>
-                                <span>Піднято сьогодні о <span class="text-emerald-950 font-black">${item.liftedTime || '—'}</span> (${item.liftedBy})</span>
-                            </div>
-                        `;
-                    } else {
-                        liftStatusHtml = `
-                            <div class="bg-slate-100/80 text-slate-600 text-xs font-semibold px-3 py-2 rounded-2xl border border-slate-200/40 flex items-center gap-2 w-full">
-                                <span class="h-2 w-2 rounded-full bg-slate-400"></span>
-                                <span class="truncate">Піднімали раніше: ${item.liftedBy || '—'} (${item.liftedTime || '—'})</span>
-                            </div>
-                        `;
-                    }
-
-                    const card = document.createElement('div');
-                    card.className = `bg-white p-3.5 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-2.5 relative transition-all active:scale-[0.99] ${rowStateClass}`;
-                    card.setAttribute('data-article', item.article);
-                    card.setAttribute('data-last-timestamp', item.lastTimestamp);
-
-                    card.innerHTML = `
-                        <!-- Верхній блок: Артикул та Дії (Докидка ліворуч, Сховати праворуч) -->
-                        <div class="flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <!-- Кнопка Докидки -->
-                                <button class="dokydka-toggle-btn w-7 h-7 rounded-full flex items-center justify-center transition-all ${isInDokydka ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-400 border border-slate-200/60 hover:bg-slate-200'}">
-                                    <i class="fa-solid fa-check text-[10px]"></i>
-                                </button>
-                                <div class="flex flex-col min-w-0">
-                                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider">АРТИКУЛ</span>
-                                    <span class="text-sm font-black text-slate-900 tracking-tight select-all truncate">${item.article}</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Кнопка приховування (перенесена вгору для чистоти дизайну) -->
-                            <button class="hide-button text-slate-300 hover:text-red-500 p-2 rounded-xl transition-all" title="Приховати/Показати">
-                                <i class="fa-solid ${isSeen && !isUpdated ? 'fa-eye-slash text-slate-400' : 'fa-eye'} text-base"></i>
-                            </button>
-                        </div>
-
-                        <!-- Назва товару -->
-                        <div class="text-[11px] font-bold text-slate-700 line-clamp-1 leading-snug">${item.name}</div>
-
-                        <!-- Локація (Ячейка відбору) -->
-                        <div class="flex gap-2 text-xs font-black">
-                            <div class="bg-slate-900 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                                <span class="text-[8px] text-slate-400 uppercase tracking-wider font-bold">Ячейка:</span>
-                                <span>${item.cell || '—'}</span>
-                            </div>
-                        </div>
-
-                        <!-- Інформаційне табло: ВІДКЛАЛИ | В ЯЧЕЙЦІ | ЗАПАС -->
-                        <div class="grid grid-cols-3 gap-1.5 pt-1">
-                            <!-- 1. Скільки відклали -->
-                            <div class="bg-cyan-50/60 rounded-2xl p-2.5 border border-cyan-100 text-center flex flex-col justify-center">
-                                <span class="text-[8px] font-black text-cyan-600 uppercase tracking-wider block mb-0.5">Відклали</span>
-                                <span class="text-sm font-black text-cyan-900">${item.count} шт</span>
-                            </div>
-
-                            <!-- 2. Скільки в ячейці -->
-                            <div class="rounded-2xl p-2.5 border text-center flex flex-col justify-center ${inCellColorClass}">
-                                <span class="text-[8px] font-black uppercase tracking-wider block mb-0.5">В ячейці</span>
-                                <span class="text-sm font-black">${item.inCell || '0'} шт</span>
-                            </div>
-
-                            <!-- 3. Скільки запас (Місце та палета) -->
-                            <div class="bg-purple-50/60 rounded-2xl p-2.5 border border-purple-100 text-center flex flex-col justify-center min-w-0">
-                                <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider block mb-0.5">Запас (Місце)</span>
-                                <span class="text-xs font-black text-purple-900 truncate block">
-                                    ${item.stock ? item.stock : 'Немає'}
-                                </span>
-                                ${item.stock && item.pallet ? `<span class="text-[9px] font-bold text-purple-500 block truncate mt-0.5">Пал: ${item.pallet}</span>` : ''}
-                            </div>
-                        </div>
-
-                        <!-- Нижній блок: Великий статус «Піднімали» -->
-                        <div class="mt-1 pt-1">
-                            ${liftStatusHtml}
-                        </div>
-                    `;
-                    mobileCardsList.appendChild(card);
-                });
-
-                // Події докидки
-                document.querySelectorAll('.dokydka-toggle-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const row = btn.closest('[data-article]');
-                        const art = row.getAttribute('data-article');
-                        const rawItem = allUniqueRows.find(r => r.article === art);
-                        if (rawItem) toggleDokydkaItem(rawItem);
+                // Секція «До перевірки»
+                if (todoItems.length > 0) {
+                    todoHeading.classList.remove('hidden');
+                    todoHeading.textContent = `До перевірки · ${todoItems.length}`;
+                    allDoneBanner.classList.add('hidden');
+                    todoItems.forEach(({ item, isUpdated }) => {
+                        todoCardsList.appendChild(buildTodoCard(item, isUpdated));
                     });
+                } else {
+                    todoHeading.classList.add('hidden');
+                    // Все перевірено (показуємо банер лише без пошуку)
+                    if (searchQuery.trim() === '') allDoneBanner.classList.remove('hidden');
+                    else allDoneBanner.classList.add('hidden');
+                }
+
+                // Секція «Перевірено»
+                if (doneItems.length > 0) {
+                    doneSection.classList.remove('hidden');
+                    doneHeading.textContent = `Перевірено · ${doneItems.length}`;
+                    doneItems.forEach(({ item, status }) => {
+                        doneCardsList.appendChild(buildDoneRow(item, status));
+                    });
+                } else {
+                    doneSection.classList.add('hidden');
+                }
+            }
+
+            // Делегування подій на списках
+            todoCardsList.addEventListener('click', (e) => {
+                const okBtn = e.target.closest('.ok-btn');
+                const dokBtn = e.target.closest('.dokydka-btn');
+                if (!okBtn && !dokBtn) return;
+                const card = e.target.closest('[data-article]');
+                const article = card.getAttribute('data-article');
+                const rawItem = allUniqueRows.find(r => r.article === article);
+                if (!rawItem) return;
+                if (okBtn) markOk(article);
+                else markDokydka(rawItem);
+            });
+
+            doneCardsList.addEventListener('click', (e) => {
+                const undoBtn = e.target.closest('.undo-btn');
+                if (!undoBtn) return;
+                const row = e.target.closest('[data-article]');
+                undoCheck(row.getAttribute('data-article'));
+            });
+
+            // Перемикач сортування
+            function applySortButtons() {
+                document.querySelectorAll('.sort-btn').forEach(b => {
+                    const active = b.getAttribute('data-sort') === sortMode;
+                    b.classList.toggle('bg-white', active);
+                    b.classList.toggle('shadow-sm', active);
+                    b.classList.toggle('text-slate-900', active);
+                    b.classList.toggle('text-slate-500', !active);
                 });
             }
-
-            // Логіка Сховати/Показати
-            function handleToggleSeen(article, row) {
-                let seen = getSeenArticles();
-                const isAlreadySeen = row.classList.contains('seen-row');
-
-                if (isAlreadySeen) {
-                    seen = seen.filter(i => i.article !== article);
-                    showToast(`Артикул ${article} відновлено`, 'info');
-                } else {
-                    seen = seen.filter(i => i.article !== article);
-                    seen.push({ article, seenTime: Date.now() });
-                    showToast(`Приховано артикул ${article}`, 'success');
-                }
-                saveSeenArticles(seen);
-                renderAll(allUniqueRows);
-            }
-
-            mobileCardsList.addEventListener('click', (e) => {
-                const btn = e.target.closest('.hide-button');
-                if (!btn) return;
-                const card = btn.closest('[data-article]');
-                const article = card.getAttribute('data-article');
-                handleToggleSeen(article, card);
+            applySortButtons();
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sortMode = btn.getAttribute('data-sort');
+                    localStorage.setItem('sort_mode_v1', sortMode);
+                    applySortButtons();
+                    renderAll(allUniqueRows);
+                });
             });
 
             // Обробка сирих даних
@@ -775,14 +1090,17 @@
 
                 if (articlesToday.length === 0) {
                     loader.classList.add('hidden');
-                    dataContainer.innerHTML = `
-                        <div class="text-center py-20 text-slate-400 flex flex-col items-center justify-center gap-2">
+                    todoHeading.classList.add('hidden');
+                    doneSection.classList.add('hidden');
+                    allDoneBanner.classList.add('hidden');
+                    todoCardsList.innerHTML = `
+                        <div class="text-center py-20 text-slate-400 flex flex-col items-center justify-center gap-2.5">
                             <i class="fa-solid fa-calendar-xmark text-4xl text-slate-300"></i>
-                            <p class="text-xs font-bold text-slate-700">За сьогодні нічого не відкладали</p>
+                            <p class="text-sm font-bold text-slate-700">За сьогодні нічого не відкладали</p>
                         </div>
                     `;
                     dataContainer.classList.remove('hidden');
-                    uniqueArticlesCountSpan.textContent = "0 артикулів сьогодні";
+                    updateProgress(0, 0);
                     return;
                 }
 
@@ -815,8 +1133,6 @@
 
                 allUniqueRows = Array.from(articleDataMap.values());
 
-                uniqueArticlesCountSpan.textContent = `${allUniqueRows.length} унікальних артикулів`;
-                
                 loader.classList.add('hidden');
                 dataContainer.classList.remove('hidden');
 
@@ -866,9 +1182,19 @@
             }
 
             // Пошук
+            const searchClearBtn = document.getElementById('search-clear-btn');
             searchInput.addEventListener('input', (e) => {
                 searchQuery = e.target.value;
+                if (searchQuery.trim() !== '') searchClearBtn.classList.remove('hidden');
+                else searchClearBtn.classList.add('hidden');
                 renderAll(allUniqueRows);
+            });
+            searchClearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                searchQuery = '';
+                searchClearBtn.classList.add('hidden');
+                renderAll(allUniqueRows);
+                searchInput.focus();
             });
 
             // Нижнє меню
@@ -881,12 +1207,12 @@
                     const target = btn.getAttribute('data-target');
 
                     document.querySelectorAll('.nav-tab-btn').forEach(b => {
-                        b.classList.remove('text-cyan-600');
+                        b.classList.remove('text-slate-900');
                         b.classList.add('text-slate-400');
                         b.querySelector('span').classList.replace('font-black', 'font-medium');
                     });
 
-                    btn.classList.add('text-cyan-600');
+                    btn.classList.add('text-slate-900');
                     btn.classList.remove('text-slate-400');
                     btn.querySelector('span').classList.replace('font-medium', 'font-black');
 
@@ -906,6 +1232,7 @@
             // Кнопка оновити
             document.getElementById('refresh-data-btn').addEventListener('click', () => {
                 loadData(true);
+                pullState(true);
             });
 
             // Toggle налаштувань
@@ -917,53 +1244,112 @@
                 else chevron.classList.add('rotate-180');
             });
 
-            // Скинути переглянуті
+            // Скинути всі перевірки
             if (resetButton) {
                 resetButton.addEventListener('click', () => {
-                    showConfirm('Показати всі приховані?', 'Повернути всі приховані вами товари назад у загальний список?', () => {
-                        localStorage.removeItem('seenArticles_v3');
+                    showConfirm('Скинути всі перевірки?', 'Усі позначки «Все є» та «Надіслано» буде знято, товари повернуться в список «До перевірки». Список докидки (ще не надісланий) не зміниться. Скидання синхронізується на всі пристрої.', () => {
+                        saveSeenArticles([]);
+                        saveSentArticles([]);
                         renderAll(allUniqueRows);
-                        showToast('Всі товари знову показуються!', 'success');
+                        showToast('Перевірки скинуто!', 'success');
                     });
                 });
             }
 
             // Код Apps Script
             document.getElementById('copy-script-code-btn').addEventListener('click', () => {
-                const scriptCode = `function doPost(e) {
+                const scriptCode = `// Веб-додаток «Перевірка докидки»: журнал докидки + синхронізація стану між пристроями.
+// Розгортання: Deploy -> Manage deployments -> Edit -> New version.
+// Execute as: Me.  Who has access: Anyone (anonymous).
+
+function doGet(e)  { return handle(e); }
+function doPost(e) { return handle(e); }
+
+var STATE_SHEET = "Стан_додатку";
+var LOG_SHEET   = "Докидка відкладеного";
+
+function handle(e) {
   var lock = LockService.getScriptLock();
-  lock.tryLock(10000);
+  lock.tryLock(15000);
   try {
     var doc = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = doc.getSheetByName("Докидка відкладеного");
-    if (!sheet) {
-      sheet = doc.insertSheet("Докидка відкладеного");
-      sheet.appendRow(["Артикул", "Назва", "Ячейка", "Запас", "К-сть", "Дата додавання"]);
-      sheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#e6f7ff");
+
+    var body = null;
+    if (e && e.postData && e.postData.contents) {
+      try { body = JSON.parse(e.postData.contents); } catch (err) { body = null; }
     }
-    
-    var data = JSON.parse(e.postData.contents);
-    var today = new Date();
-    
-    data.forEach(function(item) {
-      sheet.appendRow([
-        item.article,
-        item.name,
-        item.cell,
-        item.stock,
-        item.count,
-        today
-      ]);
-    });
-    
-    return ContentService.createTextOutput(JSON.stringify({ "status": "success" }))
-      .setMimeType(ContentService.MimeType.JSON);
+
+    var action = (e && e.parameter && e.parameter.action) || (body && body.action) || "";
+
+    if (action === "loadState") {
+      return json(loadState(doc));
+    }
+    if (action === "saveState") {
+      var savedAt = saveState(doc, body.state);
+      return json({ status: "success", savedAt: savedAt });
+    }
+    if (action === "dokydkaLog") {
+      var n = appendLog(doc, body.items);
+      return json({ status: "success", added: n });
+    }
+
+    // Сумісність зі старою версією додатка: тіло — це масив товарів для журналу
+    if (Array.isArray(body)) {
+      return json({ status: "success", added: appendLog(doc, body) });
+    }
+
+    return json({ status: "error", message: "Невідома дія" });
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return json({ status: "error", message: error.toString() });
   } finally {
     lock.releaseLock();
   }
+}
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ---- Стан додатка (синхронізація між пристроями) ----
+function loadState(doc) {
+  var sheet = doc.getSheetByName(STATE_SHEET);
+  if (!sheet) return { state: null, savedAt: 0 };
+  var raw = sheet.getRange("A1").getValue();
+  if (!raw) return { state: null, savedAt: 0 };
+  try {
+    var parsed = JSON.parse(raw);
+    return { state: parsed.state || null, savedAt: parsed.savedAt || 0 };
+  } catch (err) {
+    return { state: null, savedAt: 0 };
+  }
+}
+
+function saveState(doc, state) {
+  var sheet = doc.getSheetByName(STATE_SHEET);
+  if (!sheet) {
+    sheet = doc.insertSheet(STATE_SHEET);
+    sheet.getRange("A1").setNote("Стан веб-додатка «Перевірка докидки». Не редагувати вручну.");
+  }
+  var savedAt = Date.now(); // єдиний годинник для всіх пристроїв — час сервера
+  sheet.getRange("A1").setValue(JSON.stringify({ state: state, savedAt: savedAt }));
+  return savedAt;
+}
+
+// ---- Журнал докидки ----
+function appendLog(doc, items) {
+  var sheet = doc.getSheetByName(LOG_SHEET);
+  if (!sheet) {
+    sheet = doc.insertSheet(LOG_SHEET);
+    sheet.appendRow(["Артикул", "Назва", "Ячейка", "Запас", "К-сть", "Дата додавання"]);
+    sheet.getRange(1, 1, 1, 6).setFontWeight("bold").setBackground("#e6f7ff");
+  }
+  var today = new Date();
+  items = items || [];
+  items.forEach(function(item) {
+    sheet.appendRow([item.article, item.name, item.cell, item.stock, item.count, today]);
+  });
+  return items.length;
 }`;
                 const el = document.createElement('textarea');
                 el.value = scriptCode;
@@ -974,19 +1360,31 @@
                 showToast("Скрипт скопійовано!", "success");
             });
 
+            // Підтягуємо стан із таблиці при поверненні на вкладку / у застосунок
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') pullState(true);
+            });
+            // Коли зʼявився інтернет — підтягнути чуже й відправити своє
+            window.addEventListener('online', () => {
+                pullState(true);
+                schedulePush();
+            });
+
             // Старт
             loadData();
+            pullState();
         });
 
         // Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    const CACHE_NAME = 'vidkladaute-pwa-cache-v3';
+                    const CACHE_NAME = 'vidkladaute-pwa-cache-v6';
                     const ASSETS_TO_CACHE = [
                         '${window.location.pathname}',
                         'https://cdn.tailwindcss.com',
-                        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+                        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+                        'https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900&display=swap'
                     ];
 
                     self.addEventListener('install', (event) => {
@@ -1012,7 +1410,7 @@
                     });
 
                     self.addEventListener('fetch', (event) => {
-                        if (event.request.url.includes('googleapis.com') || event.request.url.includes('script.google.com')) {
+                        if (event.request.url.includes('sheets.googleapis.com') || event.request.url.includes('script.google.com')) {
                             return;
                         }
                         event.respondWith(
@@ -1035,7 +1433,8 @@
                 const blob = new Blob([swCode], { type: 'application/javascript' });
                 const swUrl = URL.createObjectURL(blob);
                 navigator.serviceWorker.register(swUrl, { scope: './' })
-                    .then(() => console.log('PWA Service Worker Ready'));
+                    .then(() => console.log('PWA Service Worker Ready'))
+                    .catch((err) => console.log('Service Worker недоступний у цьому середовищі:', err.message));
             });
         }
     </script>
