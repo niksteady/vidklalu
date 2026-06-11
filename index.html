@@ -678,7 +678,7 @@
                                 <span class="text-xs font-black bg-orange-100 text-orange-800 px-2 py-0.5 rounded-lg">${item.count} шт</span>
                             </div>
                             <span class="text-sm text-slate-500 font-medium truncate block">${item.name}</span>
-                            ${item.stock ? `<span class="text-xs text-purple-600 font-bold">Запас: ${item.stock}${item.pallet ? ' · Пал: ' + item.pallet : ''}</span>` : ''}
+                            ${(item.stock || item.pallet) ? `<span class="text-xs text-purple-600 font-bold">Запас: ${item.stock || 'Є'}${item.pallet ? ' · Пал: ' + item.pallet : ''}</span>` : ''}
                         </div>
                         <button class="remove-dokydka-btn shrink-0 w-11 h-11 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl text-base transition-all" data-index="${index}" aria-label="Вилучити зі списку">
                             <i class="fa-solid fa-trash-can"></i>
@@ -809,6 +809,20 @@
                 const countVal = parseFloat(item.count) || 0;
                 const isLiftedToday = item.liftedBy === todayFormatted;
 
+                // Запас: число має пріоритет. Якщо числа немає, але вказана палета —
+                // товар фізично є на тій палеті, тож показуємо «Є», а не «Немає».
+                let stockMain, stockSub;
+                if (item.stock) {
+                    stockMain = item.stock;
+                    stockSub = item.pallet ? `Пал: ${item.pallet}` : '';
+                } else if (item.pallet) {
+                    stockMain = 'Є';
+                    stockSub = `Пал: ${item.pallet}`;
+                } else {
+                    stockMain = 'Немає';
+                    stockSub = '';
+                }
+
                 // Динамічний колір для "В ячейці"
                 let inCellColorClass = 'bg-emerald-50 text-emerald-800 border-emerald-200/60';
                 if (inCellVal <= 0) {
@@ -876,8 +890,8 @@
                         </div>
                         <div class="bg-purple-50/60 rounded-2xl px-2 py-3 border border-purple-100 text-center flex flex-col justify-center min-w-0">
                             <span class="text-[10px] font-black text-purple-600 uppercase tracking-wide block mb-0.5">Запас</span>
-                            <span class="text-sm font-black text-purple-900 truncate block leading-tight">${item.stock ? item.stock : 'Немає'}</span>
-                            ${item.stock && item.pallet ? `<span class="text-[10px] font-bold text-purple-500 block truncate mt-0.5">Пал: ${item.pallet}</span>` : ''}
+                            <span class="text-sm font-black text-purple-900 truncate block leading-tight">${stockMain}</span>
+                            ${stockSub ? `<span class="text-[10px] font-bold text-purple-500 block truncate mt-0.5">${stockSub}</span>` : ''}
                         </div>
                     </div>
 
